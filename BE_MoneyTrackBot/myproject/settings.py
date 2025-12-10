@@ -178,3 +178,7 @@ SIMPLE_JWT = {
 # ======================================================================
 
 GEMINI_API_KEY = "AIzaSyBnbrgg4z6gUH6-ALdYivejIF_GHI6Ksqg"
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
