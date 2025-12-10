@@ -1,0 +1,157 @@
+package ht.nguyenhuutrong.fe_moneytrackbot.api;
+
+import java.util.List;
+
+import ht.nguyenhuutrong.fe_moneytrack_bot.models.Budget;
+import ht.nguyenhuutrong.fe_moneytrack_bot.models.CashFlowEntry;
+import ht.nguyenhuutrong.fe_moneytrack_bot.models.Category;
+import ht.nguyenhuutrong.fe_moneytrack_bot.models.ChatbotRequest;
+import ht.nguyenhuutrong.fe_moneytrack_bot.models.ChatbotResponse;
+import ht.nguyenhuutrong.fe_moneytrack_bot.models.LoginRequest;
+import ht.nguyenhuutrong.fe_moneytrack_bot.models.LoginResponse;
+import ht.nguyenhuutrong.fe_moneytrack_bot.models.RegisterRequest;
+import ht.nguyenhuutrong.fe_moneytrack_bot.models.ReportEntry;
+import ht.nguyenhuutrong.fe_moneytrack_bot.models.Transaction;
+import ht.nguyenhuutrong.fe_moneytrack_bot.models.User;
+import ht.nguyenhuutrong.fe_moneytrack_bot.models.Wallet;
+import retrofit2.Call;
+import retrofit2.http.Body;
+import retrofit2.http.DELETE;
+import retrofit2.http.Field;
+import retrofit2.http.FormUrlEncoded;
+import retrofit2.http.GET;
+import retrofit2.http.POST;
+import retrofit2.http.PUT;
+import retrofit2.http.Path;
+import retrofit2.http.Query;
+
+public interface ApiService {
+
+    // ==========================================================
+    // 🧑 USER (Đăng ký / Đăng nhập)
+    // ==========================================================
+
+    @POST("api/register/")
+    Call<User> registerUser(@Body RegisterRequest registerRequest);
+
+    @POST("api/token/")
+    Call<LoginResponse> loginUser(@Body LoginRequest loginRequest);
+
+
+    // ==========================================================
+    // 💸 TRANSACTIONS
+    // ==========================================================
+
+    @GET("api/transactions/")
+    Call<List<Transaction>> getTransactions(
+            @Query("search") String searchTerm
+    );
+
+    // SỬA LẠI: Dùng @Body thay vì @FormUrlEncoded
+    @POST("api/transactions/")
+    Call<Transaction> createTransaction(
+            @Body Transaction transaction
+    );
+
+    @GET("api/transactions/{id}/")
+    Call<Transaction> getTransactionDetails(
+            @Path("id") int transactionId
+    );
+
+    // SỬA LẠI: Dùng @Body thay vì @FormUrlEncoded
+    @PUT("api/transactions/{id}/")
+    Call<Transaction> updateTransaction(
+            @Path("id") int transactionId,
+            @Body Transaction transaction // Gửi cả object Transaction
+    );
+
+    @DELETE("api/transactions/{id}/")
+    Call<Void> deleteTransaction(
+            @Path("id") int transactionId
+    );
+
+
+    // ==========================================================
+    // 🏷️ CATEGORIES
+    // ==========================================================
+
+    @GET("api/categories/")
+    Call<List<Category>> getCategories(
+    );
+
+    // SỬA LẠI: Dùng @Body
+    @POST("api/categories/")
+    Call<Category> createCategory(
+            @Body Category category
+    );
+
+
+    // ==========================================================
+    // 💰 WALLETS
+    // ==========================================================
+
+    @GET("api/wallets/")
+    Call<List<Wallet>> getWallets(
+    );
+
+    // SỬA LẠI: Dùng @Body
+    @POST("api/wallets/")
+    Call<Wallet> createWallet(
+            @Body Wallet wallet
+    );
+
+
+    // ==========================================================
+    // 🔁 TRANSFER (Chuyển tiền giữa 2 ví)
+    // ==========================================================
+
+    // Giữ nguyên @FormUrlEncoded vì đây là custom view
+    @FormUrlEncoded
+    @POST("api/transfer/")
+    Call<Void> transferFunds(
+            @Field("from_wallet_id") int fromWalletId,
+            @Field("to_wallet_id") int toWalletId,
+            @Field("amount") double amount,
+            @Field("date") String date, // "YYYY-MM-DD"
+            @Field("description") String description
+    );
+
+
+    // ==========================================================
+    // 📊 REPORT & BUDGET
+    // ==========================================================
+
+    @GET("api/reports/summary/")
+    Call<List<ReportEntry>> getReportSummary(
+            @Query("start_date") String startDate,
+            @Query("end_date") String endDate
+    );
+
+    @GET("api/budgets/")
+    Call<List<Budget>> getBudgets(
+            @Query("month") int month,
+            @Query("year") int year
+    );
+
+    // SỬA LẠI: Dùng @Body
+    @POST("api/budgets/")
+    Call<Budget> createBudget(
+            @Body Budget budget
+    );
+
+    @GET("api/reports/cashflow/")
+    Call<List<CashFlowEntry>> getCashFlowReport(
+            @Query("start_date") String startDate,
+            @Query("end_date") String endDate
+    );
+
+
+    // ==========================================================
+    // 💬 CHATBOT (API BỊ THIẾU)
+    // ==========================================================
+
+    @POST("api/chatbot/")
+    Call<ChatbotResponse> postChatbotMessage(
+            @Body ChatbotRequest request
+    );
+}

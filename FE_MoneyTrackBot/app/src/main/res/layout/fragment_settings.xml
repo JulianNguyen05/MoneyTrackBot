@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/off_white"
+    android:fillViewport="true">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingBottom="40dp">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="24dp">
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/btnThemeToggle"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_gravity="end|top"
+                style="@style/Widget.Material3.CardView.Outlined"
+                app:strokeColor="#FFB74D"
+                app:strokeWidth="1dp"
+                app:cardCornerRadius="12dp"
+                app:cardBackgroundColor="@android:color/transparent"
+                android:clickable="true"
+                android:focusable="true">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_wb_sunny"
+                    app:tint="#FFB74D"/>
+            </com.google.android.material.card.MaterialCardView>
+
+            <ImageView
+                android:id="@+id/imgIllustration"
+                android:layout_width="160dp"
+                android:layout_height="160dp"
+                android:layout_gravity="center"
+                android:layout_marginTop="20dp"
+                android:src="@mipmap/logo"
+                tools:src="@tools:sample/avatars"/>
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="16dp"
+            android:layout_marginBottom="24dp">
+
+            <include
+                android:id="@+id/itemWallet"
+                layout="@layout/item_setting_card_double" />
+
+            <Space android:layout_width="match_parent" android:layout_height="12dp"/>
+
+            <include
+                android:id="@+id/itemAccount"
+                layout="@layout/item_setting_card_double" />
+        </LinearLayout>
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="16dp">
+
+            <include
+                android:id="@+id/itemPremium"
+                layout="@layout/item_setting_card_single" />
+
+            <Space android:layout_width="match_parent" android:layout_height="12dp"/>
+
+            <include
+                android:id="@+id/itemFeature"
+                layout="@layout/item_setting_card_single" />
+
+            <Space android:layout_width="match_parent" android:layout_height="12dp"/>
+
+            <include
+                android:id="@+id/itemContact"
+                layout="@layout/item_setting_card_single" />
+
+            <Space android:layout_width="match_parent" android:layout_height="12dp"/>
+
+            <include
+                android:id="@+id/itemTerms"
+                layout="@layout/item_setting_card_single" />
+
+            <Space android:layout_width="match_parent" android:layout_height="12dp"/>
+
+            <include
+                android:id="@+id/itemPrivacy"
+                layout="@layout/item_setting_card_single" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</androidx.core.widget.NestedScrollView>
