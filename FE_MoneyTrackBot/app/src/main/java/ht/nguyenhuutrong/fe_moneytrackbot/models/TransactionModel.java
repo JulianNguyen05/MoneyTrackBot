@@ -1,4 +1,4 @@
-package ht.nguyenhuutrong.fe_moneytrackbot;
+package ht.nguyenhuutrong.fe_moneytrackbot.models;
 
 public class TransactionModel {
     private String date;

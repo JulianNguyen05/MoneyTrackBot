@@ -11,9 +11,11 @@ import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
+import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.text.NumberFormat;
@@ -28,6 +30,7 @@ import ht.nguyenhuutrong.fe_moneytrack_bot.api.RetrofitClient;
 import ht.nguyenhuutrong.fe_moneytrack_bot.api.TokenManager;
 import ht.nguyenhuutrong.fe_moneytrack_bot.models.Transaction;
 import ht.nguyenhuutrong.fe_moneytrack_bot.models.Wallet;
+import ht.nguyenhuutrong.fe_moneytrackbot.R;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -248,5 +251,48 @@ public class MainActivity extends AppCompatActivity implements TransactionAdapte
                 Toast.makeText(MainActivity.this, "Lỗi mạng: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    BottomNavigationView bottomNavigationView;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(ht.nguyenhuutrong.fe_moneytrackbot.R.layout.activity_main);
+
+        bottomNavigationView = findViewById(ht.nguyenhuutrong.fe_moneytrackbot.R.id.bottom_navigation);
+
+        // Hiển thị HomeFragment mặc định
+        replaceFragment(new HomeFragment());
+        bottomNavigationView.setSelectedItemId(ht.nguyenhuutrong.fe_moneytrackbot.R.id.nav_home);
+
+        // Bắt sự kiện chọn bottom nav
+        bottomNavigationView.setOnItemSelectedListener(item -> {
+            Fragment fragment = null;
+            int id = item.getItemId();
+
+            if (id == ht.nguyenhuutrong.fe_moneytrackbot.R.id.nav_home) {
+                fragment = new HomeFragment();
+            } else if (id == ht.nguyenhuutrong.fe_moneytrackbot.R.id.nav_transactions) {
+                fragment = new TransactionsFragment();
+            } else if (id == ht.nguyenhuutrong.fe_moneytrackbot.R.id.nav_tools) {
+                fragment = new ToolsFragment();
+            } else if (id == ht.nguyenhuutrong.fe_moneytrackbot.R.id.nav_settings) {
+                fragment = new SettingsFragment();
+            }
+
+            if (fragment != null) {
+                replaceFragment(fragment);
+            }
+
+            return true;
+        });
+    }
+
+    private void replaceFragment(Fragment fragment) {
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(ht.nguyenhuutrong.fe_moneytrackbot.R.id.fragment_container, fragment)
+                .commit();
     }
 }

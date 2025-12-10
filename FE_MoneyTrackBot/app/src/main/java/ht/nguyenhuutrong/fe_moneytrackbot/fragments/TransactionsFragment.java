@@ -1,4 +1,4 @@
-package ht.nguyenhuutrong.fe_moneytrackbot;
+package ht.nguyenhuutrong.fe_moneytrackbot.fragments;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -13,6 +13,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import ht.nguyenhuutrong.fe_moneytrackbot.R;
 
 public class TransactionsFragment extends Fragment {
     RecyclerView rcv;

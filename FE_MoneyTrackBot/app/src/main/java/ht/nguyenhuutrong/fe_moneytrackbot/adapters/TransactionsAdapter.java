@@ -1,4 +1,4 @@
-package ht.nguyenhuutrong.fe_moneytrackbot;
+package ht.nguyenhuutrong.fe_moneytrackbot.adapters;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -9,6 +9,8 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
+
+import ht.nguyenhuutrong.fe_moneytrackbot.R;
 
 public class TransactionsAdapter extends RecyclerView.Adapter<TransactionsAdapter.TransactionViewHolder> {
     private List<TransactionModel> list;

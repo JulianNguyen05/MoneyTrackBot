@@ -1,4 +1,4 @@
-package ht.nguyenhuutrong.fe_moneytrackbot;
+package ht.nguyenhuutrong.fe_moneytrackbot.fragments;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -6,6 +6,8 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.fragment.app.Fragment;
+
+import ht.nguyenhuutrong.fe_moneytrackbot.R;
 
 /**
  * A simple {@link Fragment} subclass.

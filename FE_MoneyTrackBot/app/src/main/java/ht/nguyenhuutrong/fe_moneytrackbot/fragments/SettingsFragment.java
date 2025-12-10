@@ -1,4 +1,4 @@
-package ht.nguyenhuutrong.fe_moneytrackbot;
+package ht.nguyenhuutrong.fe_moneytrackbot.fragments;
 
 import android.graphics.Color;
 import android.os.Bundle;
@@ -14,6 +14,8 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.google.android.material.card.MaterialCardView;
+
+import ht.nguyenhuutrong.fe_moneytrackbot.R;
 
 public class SettingsFragment extends Fragment {
 

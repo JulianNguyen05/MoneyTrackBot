@@ -1,4 +1,4 @@
-package ht.nguyenhuutrong.fe_moneytrackbot;
+package ht.nguyenhuutrong.fe_moneytrackbot.fragments;
 
 import android.graphics.Color;
 import android.os.Bundle;
@@ -24,6 +24,8 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
+
+import ht.nguyenhuutrong.fe_moneytrackbot.R;
 
 public class HomeFragment extends Fragment {
     private LinearLayout layoutWalletContainer;
