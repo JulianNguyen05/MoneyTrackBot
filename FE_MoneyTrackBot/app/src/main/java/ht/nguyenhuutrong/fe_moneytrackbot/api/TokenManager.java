@@ -8,19 +8,17 @@ public class TokenManager {
     private static final String PREFS_NAME = "AuthPrefs";
     private static final String KEY_ACCESS_TOKEN = "access_token";
 
-    private final SharedPreferences sharedPreferences;
-    private final SharedPreferences.Editor editor;
-
-    // ✅ Sử dụng Singleton để quản lý token toàn app
     private static TokenManager instance;
 
-    public TokenManager(Context context) {
+    private final SharedPreferences sharedPreferences;
+
+    // 🔒 Constructor private để ép buộc singleton
+    private TokenManager(Context context) {
         sharedPreferences = context.getApplicationContext()
                 .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        editor = sharedPreferences.edit();
     }
 
-    // Lấy instance duy nhất (singleton)
+    // 🔥 Singleton thread-safe
     public static synchronized TokenManager getInstance(Context context) {
         if (instance == null) {
             instance = new TokenManager(context);
@@ -28,20 +26,26 @@ public class TokenManager {
         return instance;
     }
 
-    // Lưu token đăng nhập
+    // =======================
+    //    TOKEN FUNCTIONS
+    // =======================
+
+    // Lưu token
     public void saveToken(String token) {
-        editor.putString(KEY_ACCESS_TOKEN, token);
-        editor.apply();
+        sharedPreferences.edit()
+                .putString(KEY_ACCESS_TOKEN, token)
+                .apply();
     }
 
-    // Lấy token hiện tại
+    // Lấy token
     public String getToken() {
         return sharedPreferences.getString(KEY_ACCESS_TOKEN, null);
     }
 
-    // Xóa token khi đăng xuất
+    // Xóa token khi logout
     public void clearToken() {
-        editor.remove(KEY_ACCESS_TOKEN);
-        editor.apply();
+        sharedPreferences.edit()
+                .remove(KEY_ACCESS_TOKEN)
+                .apply();
     }
 }
