@@ -21,8 +21,8 @@ public class RetrofitClient {
 
         if (retrofit == null) {
 
-            final TokenManager tokenManager =
-                    new TokenManager(context.getApplicationContext());
+            // 🔥 Lấy singleton đúng cách
+            final TokenManager tokenManager = TokenManager.getInstance(context);
 
             OkHttpClient httpClient = new OkHttpClient.Builder()
                     .addInterceptor(chain -> {

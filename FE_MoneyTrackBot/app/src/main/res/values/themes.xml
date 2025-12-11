@@ -1,17 +1,21 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
-    <style name="Base.Theme.LamThem_MaterialDesign3_FE_MoneyTrack" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+
+    <!-- Base application theme -->
+    <style name="Base.Theme.FE_MoneyTrackBot" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Bạn có thể custom màu ở đây nếu muốn -->
+        <!-- <item name="colorPrimary">@color/...</item> -->
     </style>
 
-    <style name="Theme.LamThem_MaterialDesign3_FE_MoneyTrack" parent="Base.Theme.LamThem_MaterialDesign3_FE_MoneyTrack" />
+    <!-- Theme chính của app -->
+    <style name="Theme.FE_MoneyTrackBot" parent="Base.Theme.FE_MoneyTrackBot" />
 
+    <!-- Bottom nav text (inactive) -->
     <style name="BottomNav.Text.Inactive" parent="TextAppearance.AppCompat.Caption">
         <item name="android:textSize">12sp</item>
         <item name="fontFamily">@font/poppins_regular</item>
     </style>
 
+    <!-- Bottom nav text (active) -->
     <style name="BottomNav.Text.Active" parent="TextAppearance.AppCompat.Caption">
         <item name="android:textSize">12sp</item>
         <item name="fontFamily">@font/poppins_medium</item>

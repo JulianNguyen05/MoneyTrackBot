@@ -5,27 +5,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="2d3c3080-0e50-4bf8-9897-15689bd616fa" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/api/tests.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/api/urls/auth_urls.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/api/urls/report_urls.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/api/admin.py" beforeDir="false" afterPath="$PROJECT_DIR$/api/admin.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/api/migrations/0001_initial.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/api/migrations/0002_alter_category_unique_together_and_more.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/api/models/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/api/models/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/api/models/budget.py" beforeDir="false" afterPath="$PROJECT_DIR$/api/models/budget.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/api/models/category.py" beforeDir="false" afterPath="$PROJECT_DIR$/api/models/category.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/api/models/transaction.py" beforeDir="false" afterPath="$PROJECT_DIR$/api/models/transaction.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/api/models/user.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/api/models/wallet.py" beforeDir="false" afterPath="$PROJECT_DIR$/api/models/wallet.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/api/serializers/wallet_serializer.py" beforeDir="false" afterPath="$PROJECT_DIR$/api/serializers/wallet_serializer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/api/urls/main_urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/api/urls/main_urls.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/api/views/wallet_view.py" beforeDir="false" afterPath="$PROJECT_DIR$/api/views/wallet_view.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/db.sqlite3" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/myproject/asgi.py" beforeDir="false" afterPath="$PROJECT_DIR$/myproject/asgi.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/myproject/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/myproject/settings.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/myproject/wsgi.py" beforeDir="false" afterPath="$PROJECT_DIR$/myproject/wsgi.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/java/ht/nguyenhuutrong/fe_moneytrackbot/adapters/TransactionsAdapter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/java/ht/nguyenhuutrong/fe_moneytrackbot/activities/MainActivity.java" beforeDir="false" afterPath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/java/ht/nguyenhuutrong/fe_moneytrackbot/activities/MainActivity.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/res/values/themes.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/res/values/themes.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../FE_MoneyTrackBot/settings.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/../FE_MoneyTrackBot/settings.gradle.kts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -35,22 +18,22 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
   </component>
-  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
-  "lastFilter": {
-    "state": "OPEN",
-    "assignee": "JulianNguyen05"
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;JulianNguyen05&quot;
   }
-}]]></component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "https://github.com/JulianNguyen05/MoneyTrackBot.git",
-    "accountId": "5218f281-a775-4d35-a3a6-f382d17aacd8"
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/JulianNguyen05/MoneyTrackBot.git&quot;,
+    &quot;accountId&quot;: &quot;5218f281-a775-4d35-a3a6-f382d17aacd8&quot;
   }
-}]]></component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "customColor": "",
-  "associatedIndex": 6
-}]]></component>
+}</component>
+  <component name="ProjectColorInfo">{
+  &quot;customColor&quot;: &quot;&quot;,
+  &quot;associatedIndex&quot;: 6
+}</component>
   <component name="ProjectId" id="36epyOYdqqsccr6lfpJxUFmKudG" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
@@ -61,6 +44,7 @@
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
     "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
     "git-widget-placeholder": "main",
     "junie.onboarding.icon.badge.shown": "true",

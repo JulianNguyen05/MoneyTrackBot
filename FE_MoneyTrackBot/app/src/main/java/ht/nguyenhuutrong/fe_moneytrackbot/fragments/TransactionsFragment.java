@@ -15,6 +15,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ht.nguyenhuutrong.fe_moneytrackbot.R;
+import ht.nguyenhuutrong.fe_moneytrackbot.adapters.TransactionsAdapter;
+import ht.nguyenhuutrong.fe_moneytrackbot.models.TransactionModel;
 
 public class TransactionsFragment extends Fragment {
     RecyclerView rcv;

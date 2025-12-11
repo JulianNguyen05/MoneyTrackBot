@@ -44,25 +44,19 @@ public class MainActivity extends AppCompatActivity {
         bottomNavigationView.setSelectedItemId(R.id.nav_home);
 
         // --- Bắt chọn menu bottom navigation ---
+        // FIX: Replaced switch statement with if-else if
         bottomNavigationView.setOnItemSelectedListener(item -> {
             Fragment selectedFragment = null;
+            int itemId = item.getItemId();
 
-            switch (item.getItemId()) {
-                case R.id.nav_home:
-                    selectedFragment = new HomeFragment();
-                    break;
-
-                case R.id.nav_transactions:
-                    selectedFragment = new TransactionsFragment();
-                    break;
-
-                case R.id.nav_chatbot:
-                    selectedFragment = new ChatBotFragment();
-                    break;
-
-                case R.id.nav_settings:
-                    selectedFragment = new SettingsFragment();
-                    break;
+            if (itemId == R.id.nav_home) {
+                selectedFragment = new HomeFragment();
+            } else if (itemId == R.id.nav_transactions) {
+                selectedFragment = new TransactionsFragment();
+            } else if (itemId == R.id.nav_chatbot) {
+                selectedFragment = new ChatBotFragment();
+            } else if (itemId == R.id.nav_settings) {
+                selectedFragment = new SettingsFragment();
             }
 
             if (selectedFragment != null) {
