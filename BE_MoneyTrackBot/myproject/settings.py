@@ -128,6 +128,12 @@ USE_TZ = True
 # ======================================================================
 
 STATIC_URL = "static/"
+# 🔥 THÊM DÒNG NÀY ĐỂ RENDER BIẾT CHỖ LƯU FILE:
+# (Vì bạn đang dùng Pathlib ở dòng đầu file, nên viết kiểu này là chuẩn nhất)
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
+# Nếu muốn giao diện Admin đẹp (có màu sắc) khi lên mạng, bạn nên thêm dòng này:
+STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
 
 
 # ======================================================================
