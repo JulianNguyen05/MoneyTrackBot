@@ -9,12 +9,12 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import ht.nguyenhuutrong.fe_moneytrack_bot.R;
-import ht.nguyenhuutrong.fe_moneytrack_bot.api.ApiService;
-import ht.nguyenhuutrong.fe_moneytrack_bot.api.RetrofitClient;
-import ht.nguyenhuutrong.fe_moneytrack_bot.api.TokenManager;
-import ht.nguyenhuutrong.fe_moneytrack_bot.models.LoginRequest;
-import ht.nguyenhuutrong.fe_moneytrack_bot.models.LoginResponse;
+import ht.nguyenhuutrong.fe_moneytrackbot.R;
+import ht.nguyenhuutrong.fe_moneytrackbot.api.ApiService;
+import ht.nguyenhuutrong.fe_moneytrackbot.api.RetrofitClient;
+import ht.nguyenhuutrong.fe_moneytrackbot.api.TokenManager;
+import ht.nguyenhuutrong.fe_moneytrackbot.models.LoginRequest;
+import ht.nguyenhuutrong.fe_moneytrackbot.models.LoginResponse;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -40,7 +40,7 @@ public class LoginActivity extends AppCompatActivity {
 
         // Khởi tạo API & Token
         apiService = RetrofitClient.getClient(this).create(ApiService.class);
-        tokenManager = new TokenManager(this);
+        tokenManager = TokenManager.getInstance(this);
 
         // Nếu đã có token thì vào thẳng MainActivity
         if (tokenManager.getToken() != null) {

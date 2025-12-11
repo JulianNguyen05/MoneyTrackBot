@@ -8,7 +8,7 @@
     android:clipToPadding="false"
     android:background="@color/off_white"
     android:padding="16dp"
-    tools:context=".HomeFragment">
+    tools:context=".fragments.HomeFragment">
 
     <LinearLayout
         android:id="@+id/constraintLayout2"

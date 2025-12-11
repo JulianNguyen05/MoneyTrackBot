@@ -2,18 +2,19 @@ package ht.nguyenhuutrong.fe_moneytrackbot.api;
 
 import java.util.List;
 
-import ht.nguyenhuutrong.fe_moneytrack_bot.models.Budget;
-import ht.nguyenhuutrong.fe_moneytrack_bot.models.CashFlowEntry;
-import ht.nguyenhuutrong.fe_moneytrack_bot.models.Category;
-import ht.nguyenhuutrong.fe_moneytrack_bot.models.ChatbotRequest;
-import ht.nguyenhuutrong.fe_moneytrack_bot.models.ChatbotResponse;
-import ht.nguyenhuutrong.fe_moneytrack_bot.models.LoginRequest;
-import ht.nguyenhuutrong.fe_moneytrack_bot.models.LoginResponse;
-import ht.nguyenhuutrong.fe_moneytrack_bot.models.RegisterRequest;
-import ht.nguyenhuutrong.fe_moneytrack_bot.models.ReportEntry;
-import ht.nguyenhuutrong.fe_moneytrack_bot.models.Transaction;
-import ht.nguyenhuutrong.fe_moneytrack_bot.models.User;
-import ht.nguyenhuutrong.fe_moneytrack_bot.models.Wallet;
+import ht.nguyenhuutrong.fe_moneytrackbot.models.Budget;
+import ht.nguyenhuutrong.fe_moneytrackbot.models.CashFlowEntry;
+import ht.nguyenhuutrong.fe_moneytrackbot.models.Category;
+import ht.nguyenhuutrong.fe_moneytrackbot.models.ChatbotRequest;
+import ht.nguyenhuutrong.fe_moneytrackbot.models.ChatbotResponse;
+import ht.nguyenhuutrong.fe_moneytrackbot.models.LoginRequest;
+import ht.nguyenhuutrong.fe_moneytrackbot.models.LoginResponse;
+import ht.nguyenhuutrong.fe_moneytrackbot.models.RegisterRequest;
+import ht.nguyenhuutrong.fe_moneytrackbot.models.ReportEntry;
+import ht.nguyenhuutrong.fe_moneytrackbot.models.Transaction;
+import ht.nguyenhuutrong.fe_moneytrackbot.models.User;
+import ht.nguyenhuutrong.fe_moneytrackbot.models.Wallet;
+
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.DELETE;
@@ -25,10 +26,15 @@ import retrofit2.http.PUT;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 
+/**
+ * ================================
+ *  API SERVICE — Retrofit Endpoints
+ * ================================
+ */
 public interface ApiService {
 
     // ==========================================================
-    // 🧑 USER (Đăng ký / Đăng nhập)
+    // 🧑 USER AUTH (Register / Login)
     // ==========================================================
 
     @POST("api/register/")
@@ -36,6 +42,7 @@ public interface ApiService {
 
     @POST("api/token/")
     Call<LoginResponse> loginUser(@Body LoginRequest loginRequest);
+
 
 
     // ==========================================================
@@ -47,28 +54,23 @@ public interface ApiService {
             @Query("search") String searchTerm
     );
 
-    // SỬA LẠI: Dùng @Body thay vì @FormUrlEncoded
     @POST("api/transactions/")
-    Call<Transaction> createTransaction(
-            @Body Transaction transaction
-    );
+    Call<Transaction> createTransaction(@Body Transaction transaction);
 
     @GET("api/transactions/{id}/")
     Call<Transaction> getTransactionDetails(
             @Path("id") int transactionId
     );
 
-    // SỬA LẠI: Dùng @Body thay vì @FormUrlEncoded
     @PUT("api/transactions/{id}/")
     Call<Transaction> updateTransaction(
             @Path("id") int transactionId,
-            @Body Transaction transaction // Gửi cả object Transaction
+            @Body Transaction transaction
     );
 
     @DELETE("api/transactions/{id}/")
-    Call<Void> deleteTransaction(
-            @Path("id") int transactionId
-    );
+    Call<Void> deleteTransaction(@Path("id") int transactionId);
+
 
 
     // ==========================================================
@@ -76,14 +78,11 @@ public interface ApiService {
     // ==========================================================
 
     @GET("api/categories/")
-    Call<List<Category>> getCategories(
-    );
+    Call<List<Category>> getCategories();
 
-    // SỬA LẠI: Dùng @Body
     @POST("api/categories/")
-    Call<Category> createCategory(
-            @Body Category category
-    );
+    Call<Category> createCategory(@Body Category category);
+
 
 
     // ==========================================================
@@ -91,34 +90,31 @@ public interface ApiService {
     // ==========================================================
 
     @GET("api/wallets/")
-    Call<List<Wallet>> getWallets(
-    );
+    Call<List<Wallet>> getWallets();
 
-    // SỬA LẠI: Dùng @Body
     @POST("api/wallets/")
-    Call<Wallet> createWallet(
-            @Body Wallet wallet
-    );
+    Call<Wallet> createWallet(@Body Wallet wallet);
+
 
 
     // ==========================================================
-    // 🔁 TRANSFER (Chuyển tiền giữa 2 ví)
+    // 🔁 TRANSFER (Wallet → Wallet)
     // ==========================================================
 
-    // Giữ nguyên @FormUrlEncoded vì đây là custom view
     @FormUrlEncoded
     @POST("api/transfer/")
     Call<Void> transferFunds(
             @Field("from_wallet_id") int fromWalletId,
             @Field("to_wallet_id") int toWalletId,
             @Field("amount") double amount,
-            @Field("date") String date, // "YYYY-MM-DD"
+            @Field("date") String date,
             @Field("description") String description
     );
 
 
+
     // ==========================================================
-    // 📊 REPORT & BUDGET
+    // 📊 REPORTS & BUDGET
     // ==========================================================
 
     @GET("api/reports/summary/")
@@ -133,11 +129,8 @@ public interface ApiService {
             @Query("year") int year
     );
 
-    // SỬA LẠI: Dùng @Body
     @POST("api/budgets/")
-    Call<Budget> createBudget(
-            @Body Budget budget
-    );
+    Call<Budget> createBudget(@Body Budget budget);
 
     @GET("api/reports/cashflow/")
     Call<List<CashFlowEntry>> getCashFlowReport(
@@ -146,8 +139,9 @@ public interface ApiService {
     );
 
 
+
     // ==========================================================
-    // 💬 CHATBOT (API BỊ THIẾU)
+    // 🤖 CHATBOT
     // ==========================================================
 
     @POST("api/chatbot/")

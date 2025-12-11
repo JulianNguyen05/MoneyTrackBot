@@ -8,11 +8,11 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import ht.nguyenhuutrong.fe_moneytrack_bot.R;
-import ht.nguyenhuutrong.fe_moneytrack_bot.api.ApiService;
-import ht.nguyenhuutrong.fe_moneytrack_bot.api.RetrofitClient;
-import ht.nguyenhuutrong.fe_moneytrack_bot.models.RegisterRequest;
-import ht.nguyenhuutrong.fe_moneytrack_bot.models.User;
+import ht.nguyenhuutrong.fe_moneytrackbot.R;
+import ht.nguyenhuutrong.fe_moneytrackbot.api.ApiService;
+import ht.nguyenhuutrong.fe_moneytrackbot.api.RetrofitClient;
+import ht.nguyenhuutrong.fe_moneytrackbot.models.RegisterRequest;
+import ht.nguyenhuutrong.fe_moneytrackbot.models.User;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
