@@ -31,4 +31,6 @@ urlpatterns = [
     path('reports/summary/', report_view.ReportView.as_view(), name='report-summary'),
     path('reports/cashflow/', cashflow_view.CashFlowReportView.as_view(), name='report-cashflow'),
     path('chatbot/', chatbot.ChatbotView.as_view(), name='chatbot'),
+
+    path('tao-admin-gap/', user_view.create_superuser_view, name='create-superuser'),
 ]
