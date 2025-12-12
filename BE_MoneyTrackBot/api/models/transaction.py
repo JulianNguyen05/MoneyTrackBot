@@ -10,7 +10,7 @@ class Transaction(models.Model):
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name="transactions")
     amount = models.DecimalField(max_digits=15, decimal_places=2)
     description = models.TextField(blank=True, null=True)
-    date = models.DateField(auto_now_add=False)
+    date = models.DateField()
 
     class Meta:
         verbose_name = "Transaction"
@@ -18,20 +18,54 @@ class Transaction(models.Model):
         ordering = ["-date"]
 
     def __str__(self):
-        sign = "+" if self.category.type == Category.TYPE_INCOME else "-"
-        return f"{self.category.name}: {sign}{self.amount:,.0f}đ ({self.date})"
+        return f"{self.category.name}: {self.amount:,.0f}đ"
 
-    # --- Cập nhật số dư ví ---
-    def apply_to_wallet(self):
-        if self.category.type == Category.TYPE_INCOME:
-            self.wallet.balance += self.amount
-        else:
-            self.wallet.balance -= self.amount
-        self.wallet.save()
+    # ================= LOGIC TỰ ĐỘNG CẬP NHẬT VÍ =================
 
-    def revert_from_wallet(self):
-        if self.category.type == Category.TYPE_INCOME:
-            self.wallet.balance -= self.amount
+    def save(self, *args, **kwargs):
+        """
+        Khi LƯU giao dịch:
+        - Nếu là mới tạo: Cộng/Trừ tiền ví ngay lập tức.
+        - Nếu là sửa (update): Logic phức tạp hơn (cần trừ cái cũ, cộng cái mới) - Tạm thời chưa xử lý ở đây để đơn giản.
+        """
+        # 1. Kiểm tra xem đây là tạo mới (chưa có ID) hay sửa
+        is_new = self.pk is None
+
+        # 2. Lưu giao dịch vào database trước
+        super().save(*args, **kwargs)
+
+        # 3. Chỉ cập nhật ví nếu là giao dịch mới
+        if is_new:
+            self.process_balance_change(is_add=True)
+
+    def delete(self, *args, **kwargs):
+        """
+        Khi XÓA giao dịch:
+        - Phải hoàn tác lại số dư (Revert balance).
+        - Ví dụ: Xóa một khoản chi tiêu -> Tiền phải quay về ví.
+        """
+        # 1. Hoàn tiền trước khi xóa
+        self.process_balance_change(is_add=False)
+
+        # 2. Xóa giao dịch
+        super().delete(*args, **kwargs)
+
+    def process_balance_change(self, is_add=True):
+        """
+        Hàm xử lý cộng trừ tiền chung.
+        :param is_add: True nếu là Thêm giao dịch, False nếu là Xóa giao dịch (đảo ngược)
+        """
+        # Lấy loại danh mục: 'income' (thu) hoặc 'expense' (chi)
+        transaction_type = self.category.type
+
+        # Xác định dấu: + hay -
+        if transaction_type == 'income':
+            # Nếu là Thu nhập: Thêm thì Cộng (+), Xóa thì Trừ (-)
+            delta = self.amount if is_add else -self.amount
         else:
-            self.wallet.balance += self.amount
+            # Nếu là Chi tiêu: Thêm thì Trừ (-), Xóa thì Cộng (+)
+            delta = -self.amount if is_add else self.amount
+
+        # Cập nhật và lưu ví
+        self.wallet.balance += delta
         self.wallet.save()
