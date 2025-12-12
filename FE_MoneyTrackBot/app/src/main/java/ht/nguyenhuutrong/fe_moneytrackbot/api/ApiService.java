@@ -5,8 +5,8 @@ import java.util.List;
 import ht.nguyenhuutrong.fe_moneytrackbot.models.Budget;
 import ht.nguyenhuutrong.fe_moneytrackbot.models.CashFlowEntry;
 import ht.nguyenhuutrong.fe_moneytrackbot.models.Category;
-import ht.nguyenhuutrong.fe_moneytrackbot.models.ChatbotRequest;
-import ht.nguyenhuutrong.fe_moneytrackbot.models.ChatbotResponse;
+import ht.nguyenhuutrong.fe_moneytrackbot.models.ChatRequest;
+import ht.nguyenhuutrong.fe_moneytrackbot.models.ChatResponse;
 import ht.nguyenhuutrong.fe_moneytrackbot.models.LoginRequest;
 import ht.nguyenhuutrong.fe_moneytrackbot.models.LoginResponse;
 import ht.nguyenhuutrong.fe_moneytrackbot.models.RegisterRequest;
@@ -150,7 +150,5 @@ public interface ApiService {
     // ==========================================================
 
     @POST("api/chatbot/")
-    Call<ChatbotResponse> postChatbotMessage(
-            @Body ChatbotRequest request
-    );
+    Call<ChatResponse> chatWithBot(@Body ChatRequest request);
 }

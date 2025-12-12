@@ -1,11 +1,9 @@
 package ht.nguyenhuutrong.fe_moneytrackbot.models;
 
-public class ChatbotRequest {
+public class ChatRequest {
     private String message;
 
-    public ChatbotRequest(String message) {
+    public ChatRequest(String message) {
         this.message = message;
     }
-
-    // (getter/setter nếu cần)
 }

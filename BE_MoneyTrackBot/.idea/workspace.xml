@@ -5,15 +5,21 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="2d3c3080-0e50-4bf8-9897-15689bd616fa" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/res/drawable/bg_gray_rounded.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.env" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/java/ht/nguyenhuutrong/fe_moneytrackbot/adapters/ChatAdapter.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/java/ht/nguyenhuutrong/fe_moneytrackbot/models/ChatMessage.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/res/drawable/bg_edittext_rounded_gray.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/res/drawable/bg_message_received.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/res/drawable/bg_message_sent.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/res/drawable/ic_send.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/res/layout/item_message_received.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/res/layout/item_message_sent.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/api/models/transaction.py" beforeDir="false" afterPath="$PROJECT_DIR$/api/models/transaction.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/db.sqlite3" beforeDir="false" afterPath="$PROJECT_DIR$/db.sqlite3" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/java/ht/nguyenhuutrong/fe_moneytrackbot/fragments/HomeFragment.java" beforeDir="false" afterPath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/java/ht/nguyenhuutrong/fe_moneytrackbot/fragments/HomeFragment.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/java/ht/nguyenhuutrong/fe_moneytrackbot/fragments/TransactionsFragment.java" beforeDir="false" afterPath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/java/ht/nguyenhuutrong/fe_moneytrackbot/fragments/TransactionsFragment.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/res/layout/dialog_add_transaction.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/res/layout/dialog_add_transaction.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/res/layout/fragment_home.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/res/layout/fragment_home.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/res/layout/fragment_transactions.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/res/layout/fragment_transactions.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/java/ht/nguyenhuutrong/fe_moneytrackbot/api/ApiService.java" beforeDir="false" afterPath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/java/ht/nguyenhuutrong/fe_moneytrackbot/api/ApiService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/java/ht/nguyenhuutrong/fe_moneytrackbot/fragments/ChatBotFragment.java" beforeDir="false" afterPath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/java/ht/nguyenhuutrong/fe_moneytrackbot/fragments/ChatBotFragment.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/java/ht/nguyenhuutrong/fe_moneytrackbot/models/ChatbotRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/java/ht/nguyenhuutrong/fe_moneytrackbot/models/ChatRequest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/java/ht/nguyenhuutrong/fe_moneytrackbot/models/ChatbotResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/java/ht/nguyenhuutrong/fe_moneytrackbot/models/ChatResponse.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/res/layout/fragment_chatbot.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/res/layout/fragment_chatbot.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

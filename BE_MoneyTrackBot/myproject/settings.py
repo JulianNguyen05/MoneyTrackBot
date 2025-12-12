@@ -16,7 +16,7 @@ from datetime import timedelta
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Giữ nguyên key như yêu cầu
-SECRET_KEY = "django-insecure-($p^!x%h3bl5e$!0yma(q-@z9c1ke+1^k&0q@r6%vn4-oe3v4d"
+SECRET_KEY = os.getenv('SECRET_KEY')
 
 # Giữ nguyên Debug = True
 DEBUG = True
@@ -192,4 +192,4 @@ SIMPLE_JWT = {
 # 🤖 GEMINI API KEY (Giữ nguyên)
 # ======================================================================
 
-GEMINI_API_KEY = "AIzaSyBnbrgg4z6gUH6-ALdYivejIF_GHI6Ksqg"
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
