@@ -383,6 +383,21 @@
             </androidx.constraintlayout.widget.ConstraintLayout>
         </com.google.android.material.card.MaterialCardView>
 
+        <!--PHẦN 6: THẺ DANH MỤC VÀ NÚT DANH MỤC MỚI -->
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="12dp"
+            android:scrollbars="none">
+
+            <LinearLayout
+                android:id="@+id/layoutCategoryContainer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"/>
+        </HorizontalScrollView>
+
+
         <!--PHẦN 6: BIỂU ĐỒ-->
 <!--        <androidx.constraintlayout.widget.ConstraintLayout-->
 <!--            android:layout_width="match_parent"-->

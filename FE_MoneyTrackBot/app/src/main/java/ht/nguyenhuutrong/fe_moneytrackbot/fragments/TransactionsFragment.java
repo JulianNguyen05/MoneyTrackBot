@@ -28,9 +28,9 @@ import java.util.Locale;
 import ht.nguyenhuutrong.fe_moneytrackbot.R;
 import ht.nguyenhuutrong.fe_moneytrackbot.adapters.TransactionsAdapter;
 import ht.nguyenhuutrong.fe_moneytrackbot.api.RetrofitClient;
-import ht.nguyenhuutrong.fe_moneytrackbot.models.Category; // Import mới
+import ht.nguyenhuutrong.fe_moneytrackbot.models.Category;
 import ht.nguyenhuutrong.fe_moneytrackbot.models.Transaction;
-import ht.nguyenhuutrong.fe_moneytrackbot.models.Wallet;    // Import mới
+import ht.nguyenhuutrong.fe_moneytrackbot.models.Wallet;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -41,7 +41,7 @@ public class TransactionsFragment extends Fragment {
     List<Transaction> transactionList = new ArrayList<>();
     MaterialCardView btnAddTransaction;
 
-    // 🔥 1. Biến lưu trữ danh sách lấy từ Server
+    // Biến lưu trữ danh sách lấy từ Server
     private List<Wallet> serverWallets = new ArrayList<>();
     private List<Category> serverCategories = new ArrayList<>();
 
@@ -61,7 +61,7 @@ public class TransactionsFragment extends Fragment {
         adapter = new TransactionsAdapter(transactionList);
         rcv.setAdapter(adapter);
 
-        // 🔥 2. Gọi API để tải dữ liệu cần thiết ngay khi vào màn hình
+        // Gọi API tải dữ liệu
         loadTransactions();
         loadWalletsFromServer();
         loadCategoriesFromServer();
@@ -79,7 +79,7 @@ public class TransactionsFragment extends Fragment {
             @Override
             public void onResponse(Call<List<Wallet>> call, Response<List<Wallet>> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    serverWallets = response.body(); // Lưu lại để dùng cho Dialog
+                    serverWallets = response.body();
                 }
             }
             @Override
@@ -93,7 +93,7 @@ public class TransactionsFragment extends Fragment {
             @Override
             public void onResponse(Call<List<Category>> call, Response<List<Category>> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    serverCategories = response.body(); // Lưu lại để dùng cho Dialog
+                    serverCategories = response.body();
                 }
             }
             @Override
@@ -123,10 +123,9 @@ public class TransactionsFragment extends Fragment {
     private void showAddTransactionDialog() {
         if (getContext() == null) return;
 
-        // Kiểm tra xem dữ liệu đã tải xong chưa
+        // Kiểm tra dữ liệu đã tải xong chưa
         if (serverWallets.isEmpty() || serverCategories.isEmpty()) {
-            Toast.makeText(getContext(), "Đang tải dữ liệu Ví & Danh mục, vui lòng thử lại sau giây lát!", Toast.LENGTH_SHORT).show();
-            // Gọi tải lại phòng trường hợp mạng lag
+            Toast.makeText(getContext(), "Đang tải dữ liệu Ví & Danh mục...", Toast.LENGTH_SHORT).show();
             loadWalletsFromServer();
             loadCategoriesFromServer();
             return;
@@ -138,28 +137,29 @@ public class TransactionsFragment extends Fragment {
         AutoCompleteTextView autoCategory = dialogView.findViewById(R.id.auto_complete_category);
         AutoCompleteTextView autoWallet = dialogView.findViewById(R.id.auto_complete_wallet);
 
-        // 🔥 3. Đổ dữ liệu thật vào Dropdown CATEGORY
-        // ArrayAdapter mặc định dùng phương thức toString() của object để hiển thị tên
+        // --- 1. Cấu hình Dropdown CATEGORY ---
         ArrayAdapter<Category> adapterCat = new ArrayAdapter<>(getContext(), android.R.layout.simple_dropdown_item_1line, serverCategories);
         autoCategory.setAdapter(adapterCat);
 
-        // Mặc định chọn cái đầu tiên
-        autoCategory.setText(serverCategories.get(0).getName(), false);
-        selectedCategoryId = serverCategories.get(0).getId();
+        // Chọn mặc định cái đầu tiên
+        if (!serverCategories.isEmpty()) {
+            autoCategory.setText(serverCategories.get(0).getName(), false);
+            selectedCategoryId = serverCategories.get(0).getId();
+        }
 
-        // Bắt sự kiện chọn
         autoCategory.setOnItemClickListener((parent, view, position, id) -> {
-            // Lấy object Category tại vị trí click -> Lấy ID thật
             Category selectedCat = (Category) parent.getItemAtPosition(position);
             selectedCategoryId = selectedCat.getId();
         });
 
-        // 🔥 4. Đổ dữ liệu thật vào Dropdown WALLET
+        // --- 2. Cấu hình Dropdown WALLET ---
         ArrayAdapter<Wallet> adapterWallet = new ArrayAdapter<>(getContext(), android.R.layout.simple_dropdown_item_1line, serverWallets);
         autoWallet.setAdapter(adapterWallet);
 
-        autoWallet.setText(serverWallets.get(0).getName(), false);
-        selectedWalletId = serverWallets.get(0).getId();
+        if (!serverWallets.isEmpty()) {
+            autoWallet.setText(serverWallets.get(0).getName(), false);
+            selectedWalletId = serverWallets.get(0).getId();
+        }
 
         autoWallet.setOnItemClickListener((parent, view, position, id) -> {
             Wallet selectedWallet = (Wallet) parent.getItemAtPosition(position);
@@ -182,7 +182,7 @@ public class TransactionsFragment extends Fragment {
                         double amount = Double.parseDouble(amountStr);
                         String today = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
 
-                        // Gọi API với ID thật đã chọn
+                        // Gọi API tạo mới
                         createTransactionOnServer(amount, selectedCategoryId, note, today, selectedWalletId);
 
                     } catch (NumberFormatException e) {
@@ -199,9 +199,9 @@ public class TransactionsFragment extends Fragment {
     }
 
     private void createTransactionOnServer(double amount, int categoryId, String note, String date, int walletId) {
-        // Lưu ý: categoryId ở đây đang là int, nếu Model Transaction của bạn biến category là String
-        // thì hãy đổi thành String.valueOf(categoryId)
-        Transaction newTrans = new Transaction(amount, String.valueOf(categoryId), note, date, walletId);
+        // 🔥 QUAN TRỌNG: Truyền thẳng int categoryId (Không bọc String.valueOf)
+        // Yêu cầu Model Transaction.java constructor phải nhận tham số int cho category
+        Transaction newTrans = new Transaction(amount, categoryId, note, date, walletId);
 
         RetrofitClient.getApiService(getContext()).createTransaction(newTrans).enqueue(new Callback<Transaction>() {
             @Override
