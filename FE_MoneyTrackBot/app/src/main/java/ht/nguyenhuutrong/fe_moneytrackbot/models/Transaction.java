@@ -1,104 +1,51 @@
 package ht.nguyenhuutrong.fe_moneytrackbot.models;
 
 import com.google.gson.annotations.SerializedName;
+import java.io.Serializable;
 
-public class Transaction {
-
+public class Transaction implements Serializable {
     @SerializedName("id")
     private int id;
 
     @SerializedName("amount")
     private double amount;
 
-    @SerializedName("description")
-    private String description;
-
-    // API trả về ngày dạng "YYYY-MM-DD"
-    @SerializedName("date")
-    private String date;
-
-    // Tên danh mục hiển thị trong list
-    @SerializedName("category_name")
-    private String categoryName;
-
-    // Lưu ID của Category
     @SerializedName("category")
-    private int category;
+    private String category; // Ví dụ: "Ăn uống"
 
-    // Lưu ID của Wallet
+    @SerializedName("note")
+    private String note;     // Ví dụ: "Bún bò"
+
+    @SerializedName("date")
+    private String date;     // Format: YYYY-MM-DD
+
     @SerializedName("wallet")
-    private int wallet;
+    private int walletId;    // ID của ví
 
-    // ✅ Constructor rỗng để Gson có thể parse JSON
-    public Transaction() {}
+    // Constructor dùng để gửi lên Server (Tạo mới)
+    public Transaction(double amount, String category, String note, String date, int walletId) {
+        this.amount = amount;
+        this.category = category;
+        this.note = note;
+        this.date = date;
+        this.walletId = walletId;
+    }
 
-    // ✅ Constructor đầy đủ (dùng nếu tạo transaction thủ công)
-    public Transaction(int id, double amount, String description, String date, String categoryName, int category, int wallet) {
+    // Constructor đầy đủ
+    public Transaction(int id, double amount, String category, String note, String date, int walletId) {
         this.id = id;
         this.amount = amount;
-        this.description = description;
-        this.date = date;
-        this.categoryName = categoryName;
         this.category = category;
-        this.wallet = wallet;
-    }
-
-    // ✅ Getters & Setters
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public double getAmount() {
-        return amount;
-    }
-
-    public void setAmount(double amount) {
-        this.amount = amount;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public String getDate() {
-        return date;
-    }
-
-    public void setDate(String date) {
+        this.note = note;
         this.date = date;
+        this.walletId = walletId;
     }
 
-    public String getCategoryName() {
-        return categoryName;
-    }
-
-    public void setCategoryName(String categoryName) {
-        this.categoryName = categoryName;
-    }
-
-    // ✅ Getter & Setter cho Category
-    public int getCategory() {
-        return category;
-    }
-
-    public void setCategory(int category) {
-        this.category = category;
-    }
-
-    // ✅ Getter & Setter cho Wallet
-    public int getWallet() {
-        return wallet;
-    }
-
-    public void setWallet(int wallet) {
-        this.wallet = wallet;
-    }
+    // Getters
+    public int getId() { return id; }
+    public double getAmount() { return amount; }
+    public String getCategory() { return category; }
+    public String getNote() { return note; }
+    public String getDate() { return date; }
+    public int getWalletId() { return walletId; }
 }

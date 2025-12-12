@@ -95,6 +95,11 @@ public interface ApiService {
     @POST("api/wallets/")
     Call<Wallet> createWallet(@Body Wallet wallet);
 
+    @PUT("api/wallets/{id}/")
+    Call<Wallet> updateWallet(@Path("id") int id, @Body Wallet wallet);
+
+    @DELETE("api/wallets/{id}/")
+    Call<Void> deleteWallet(@Path("id") int id);
 
 
     // ==========================================================

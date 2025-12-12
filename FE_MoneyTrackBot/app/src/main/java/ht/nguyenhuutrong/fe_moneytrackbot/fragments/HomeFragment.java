@@ -1,7 +1,6 @@
 package ht.nguyenhuutrong.fe_moneytrackbot.fragments;
 
 import android.app.AlertDialog;
-import android.content.Context;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -39,26 +38,22 @@ public class HomeFragment extends Fragment {
     private MaterialCardView cardDateRangePicker;
     private TextView tvSelectedDate;
 
-    // Đã xóa biến pieChart
-
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_home, container, false);
 
-        // Ánh xạ View
         layoutWalletContainer = view.findViewById(R.id.layoutWalletContainer);
         cardDateRangePicker = view.findViewById(R.id.cardDateRangePicker);
         tvSelectedDate = view.findViewById(R.id.tvSelectedDate);
 
-        // Setup chức năng chọn ngày
         setupDateRangePicker();
-
         loadWalletsFromApi();
 
         return view;
     }
 
+    // --- 1. TẢI DANH SÁCH VÍ ---
     private void loadWalletsFromApi() {
         if (getContext() == null) return;
 
@@ -67,108 +62,149 @@ public class HomeFragment extends Fragment {
             public void onResponse(Call<List<Wallet>> call, Response<List<Wallet>> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     List<Wallet> wallets = response.body();
+                    layoutWalletContainer.removeAllViews(); // Xóa cũ
 
-                    // 1. Xóa sạch các ví cũ/dummy trên giao diện để tránh bị trùng
-                    layoutWalletContainer.removeAllViews();
-
-                    // 2. Duyệt qua danh sách server trả về và vẽ lên màn hình
                     for (Wallet wallet : wallets) {
-                        String formattedBalance = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"))
-                                .format(wallet.getBalance());
-
-                        // Add ví vào (false nghĩa là không auto select, hoặc tùy bạn)
-                        addWallet(wallet.getName(), formattedBalance, false);
+                        // Gọi hàm addWallet phiên bản mới nhận Object
+                        addWalletView(wallet);
                     }
-
-                    // 3. Cuối cùng mới thêm nút "Thêm ví" vào dưới cùng
-                    addAddWalletButton();
-
+                    addAddWalletButton(); // Thêm nút Add vào cuối
                 } else {
-                    Toast.makeText(getContext(), "Không tải được ví: " + response.code(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), "Lỗi tải ví: " + response.code(), Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onFailure(Call<List<Wallet>> call, Throwable t) {
-                Toast.makeText(getContext(), "Lỗi kết nối: " + t.getMessage(), Toast.LENGTH_SHORT).show();
-                // Dù lỗi cũng nên hiện nút Add Wallet để người dùng còn thao tác
+                Toast.makeText(getContext(), "Lỗi kết nối!", Toast.LENGTH_SHORT).show();
                 layoutWalletContainer.removeAllViews();
                 addAddWalletButton();
             }
         });
     }
 
-    // --- LOGIC MỚI: Nút thêm ví ---
+    // --- 2. THÊM VÍ MỚI (CREATE) ---
     private void addAddWalletButton() {
         if (getContext() == null) return;
-
         LayoutInflater inflater = LayoutInflater.from(getContext());
         View itemAdd = inflater.inflate(R.layout.item_add_wallet, layoutWalletContainer, false);
 
-        MaterialCardView cardAdd = itemAdd.findViewById(R.id.card_add_wallet);
-
-        // Gọi hàm mở Dialog khi bấm nút
-        cardAdd.setOnClickListener(v -> showAddWalletDialog());
+        // Bấm nút dấu cộng -> Mở Dialog Thêm
+        itemAdd.findViewById(R.id.card_add_wallet).setOnClickListener(v -> showCreateDialog());
 
         layoutWalletContainer.addView(itemAdd);
     }
 
-    // --- LOGIC MỚI: Hiển thị Dialog và Gọi API ---
-    private void showAddWalletDialog() {
+    private void showCreateDialog() {
         if (getContext() == null) return;
-
-        // Inflate layout dialog
         View dialogView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_add_wallet, null);
         EditText etName = dialogView.findViewById(R.id.et_wallet_name);
         EditText etBalance = dialogView.findViewById(R.id.et_wallet_balance);
 
         new AlertDialog.Builder(getContext())
-                .setTitle("Thêm ví mới") // Thêm title cho rõ ràng
+                .setTitle("Thêm ví mới")
                 .setView(dialogView)
-                .setPositiveButton("Lưu", (dialog, which) -> {
+                .setPositiveButton("Thêm", (dialog, which) -> {
                     String name = etName.getText().toString().trim();
                     String balanceStr = etBalance.getText().toString().trim();
-
-                    if (name.isEmpty()) {
-                        Toast.makeText(getContext(), "Vui lòng nhập tên ví", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-
+                    if (name.isEmpty()) return;
                     double balance = balanceStr.isEmpty() ? 0 : Double.parseDouble(balanceStr);
 
-                    // Gọi API tạo ví
-                    createNewWalletOnServer(name, balance);
+                    createWalletApi(name, balance);
                 })
                 .setNegativeButton("Hủy", null)
                 .show();
     }
 
-    private void createNewWalletOnServer(String name, double balance) {
+    private void createWalletApi(String name, double balance) {
         Wallet newWallet = new Wallet(name, balance);
-
-        RetrofitClient.getApiService(getContext())
-                .createWallet(newWallet)
-                .enqueue(new Callback<Wallet>() {
-                    @Override
-                    public void onResponse(Call<Wallet> call, Response<Wallet> response) {
-                        if (response.isSuccessful()) {
-                            Toast.makeText(getContext(), "Thêm ví thành công!", Toast.LENGTH_SHORT).show();
-
-                            // ✅ Gọi lại hàm tải danh sách để làm mới giao diện
-                            loadWalletsFromApi();
-                        } else {
-                            Toast.makeText(getContext(), "Lỗi server: " + response.code(), Toast.LENGTH_SHORT).show();
-                        }
-                    }
-
-                    @Override
-                    public void onFailure(Call<Wallet> call, Throwable t) {
-                        Toast.makeText(getContext(), "Lỗi kết nối: " + t.getMessage(), Toast.LENGTH_SHORT).show();
-                    }
-                });
+        RetrofitClient.getApiService(getContext()).createWallet(newWallet).enqueue(new Callback<Wallet>() {
+            @Override
+            public void onResponse(Call<Wallet> call, Response<Wallet> response) {
+                if (response.isSuccessful()) {
+                    Toast.makeText(getContext(), "Đã thêm ví!", Toast.LENGTH_SHORT).show();
+                    loadWalletsFromApi(); // Load lại
+                }
+            }
+            @Override
+            public void onFailure(Call<Wallet> call, Throwable t) {}
+        });
     }
 
-    private void addWallet(String name, String amount, boolean select) {
+    // --- 3. SỬA VÀ XÓA (UPDATE & DELETE) ---
+    // Hàm này được gọi khi bấm nhẹ vào ví
+    private void showUpdateDeleteDialog(Wallet wallet) {
+        if (getContext() == null) return;
+
+        View dialogView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_add_wallet, null);
+        EditText etName = dialogView.findViewById(R.id.et_wallet_name);
+        EditText etBalance = dialogView.findViewById(R.id.et_wallet_balance);
+
+        // Đổ dữ liệu cũ vào
+        etName.setText(wallet.getName());
+        etBalance.setText(String.valueOf((long)wallet.getBalance()));
+
+        new AlertDialog.Builder(getContext())
+                .setTitle("Chi tiết ví")
+                .setView(dialogView)
+                // Nút bên Phải: Lưu
+                .setPositiveButton("Lưu thay đổi", (dialog, which) -> {
+                    String name = etName.getText().toString().trim();
+                    String balanceStr = etBalance.getText().toString().trim();
+                    if (!name.isEmpty()) {
+                        double balance = balanceStr.isEmpty() ? 0 : Double.parseDouble(balanceStr);
+                        wallet.setName(name);
+                        wallet.setBalance(balance);
+                        updateWalletApi(wallet);
+                    }
+                })
+                // Nút bên Trái: Xóa
+                .setNeutralButton("Xóa ví này", (dialog, which) -> {
+                    // Hỏi lại cho chắc
+                    new AlertDialog.Builder(getContext())
+                            .setTitle("Xác nhận xóa")
+                            .setMessage("Bạn có chắc muốn xóa ví '" + wallet.getName() + "' không?")
+                            .setPositiveButton("Xóa luôn", (d, w) -> deleteWalletApi(wallet.getId()))
+                            .setNegativeButton("Hủy", null)
+                            .show();
+                })
+                // Nút ở Giữa: Đóng
+                .setNegativeButton("Đóng", null)
+                .show();
+    }
+
+    private void updateWalletApi(Wallet wallet) {
+        RetrofitClient.getApiService(getContext()).updateWallet(wallet.getId(), wallet).enqueue(new Callback<Wallet>() {
+            @Override
+            public void onResponse(Call<Wallet> call, Response<Wallet> response) {
+                if (response.isSuccessful()) {
+                    Toast.makeText(getContext(), "Đã cập nhật!", Toast.LENGTH_SHORT).show();
+                    loadWalletsFromApi();
+                } else {
+                    Toast.makeText(getContext(), "Lỗi cập nhật!", Toast.LENGTH_SHORT).show();
+                }
+            }
+            @Override
+            public void onFailure(Call<Wallet> call, Throwable t) {}
+        });
+    }
+
+    private void deleteWalletApi(int id) {
+        RetrofitClient.getApiService(getContext()).deleteWallet(id).enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) {
+                    Toast.makeText(getContext(), "Đã xóa ví!", Toast.LENGTH_SHORT).show();
+                    loadWalletsFromApi();
+                }
+            }
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {}
+        });
+    }
+
+    // --- 4. VẼ GIAO DIỆN VÍ ---
+    private void addWalletView(Wallet wallet) {
         if (getContext() == null) return;
         LayoutInflater inflater = LayoutInflater.from(getContext());
         View itemView = inflater.inflate(R.layout.item_wallet, layoutWalletContainer, false);
@@ -177,27 +213,31 @@ public class HomeFragment extends Fragment {
         TextView tvAmount = itemView.findViewById(R.id.tv_wallet_amount);
         MaterialCardView card = itemView.findViewById(R.id.card_wallet);
 
-        tvName.setText(name);
-        tvAmount.setText(amount);
-        card.setOnClickListener(v -> selectWallet(card));
+        String formattedBalance = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"))
+                .format(wallet.getBalance());
+        tvName.setText(wallet.getName());
+        tvAmount.setText(formattedBalance);
 
-        // Vì ta đã xóa hết view và add lại theo thứ tự, cứ add thẳng vào là được
-        layoutWalletContainer.addView(itemView);
-
-        if (select) {
+        // 🔥 LOGIC QUAN TRỌNG: Bấm vào là Sửa/Xóa luôn
+        card.setOnClickListener(v -> {
+            // 1. Vẫn đổi màu viền cho đẹp (hiệu ứng chọn)
             selectWallet(card);
-        }
+
+            // 2. Mở dialog Sửa/Xóa ngay lập tức
+            showUpdateDeleteDialog(wallet);
+        });
+
+        layoutWalletContainer.addView(itemView);
     }
 
     private void selectWallet(MaterialCardView card) {
-        if (selectedCard != null) {
-            selectedCard.setStrokeWidth(0);
-        }
+        if (selectedCard != null) selectedCard.setStrokeWidth(0);
         card.setStrokeColor(getResources().getColor(android.R.color.holo_blue_light));
         card.setStrokeWidth(6);
         selectedCard = card;
     }
 
+    // --- DATE PICKER (GIỮ NGUYÊN) ---
     private void setupDateRangePicker() {
         if (cardDateRangePicker != null) {
             cardDateRangePicker.setOnClickListener(v -> showDateRangePicker());
@@ -205,24 +245,15 @@ public class HomeFragment extends Fragment {
     }
 
     private void showDateRangePicker() {
-        MaterialDatePicker.Builder<Pair<Long, Long>> builder =
-                MaterialDatePicker.Builder.dateRangePicker();
-
+        MaterialDatePicker.Builder<Pair<Long, Long>> builder = MaterialDatePicker.Builder.dateRangePicker();
         builder.setTitleText("Chọn phạm vi thời gian");
         final MaterialDatePicker<Pair<Long, Long>> datePicker = builder.build();
-
         datePicker.addOnPositiveButtonClickListener(selection -> {
-            Long startDate = selection.first;
-            Long endDate = selection.second;
             SimpleDateFormat sdf = new SimpleDateFormat("d 'thg' M, yyyy", new Locale("vi", "VN"));
-            String startString = sdf.format(new Date(startDate));
-            String endString = sdf.format(new Date(endDate));
-
             if (tvSelectedDate != null) {
-                tvSelectedDate.setText(startString + "  -  " + endString);
+                tvSelectedDate.setText(sdf.format(new Date(selection.first)) + "  -  " + sdf.format(new Date(selection.second)));
             }
         });
-
         datePicker.show(getParentFragmentManager(), "DATE_PICKER");
     }
 }

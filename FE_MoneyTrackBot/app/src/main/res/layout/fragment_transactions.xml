@@ -214,11 +214,37 @@
     <!-- PHẦN 4: Danh sách giao dịch -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rcvTransactions"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         android:layout_marginTop="10dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/cardSummary" />
+
+    <!-- PHẦN 5: Nút thêm giao dịch -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/btnAddTransaction"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_margin="20dp"
+        android:clickable="true"
+        android:focusable="true"
+        app:cardBackgroundColor="#2E5D76"
+        app:cardCornerRadius="30dp"
+        app:cardElevation="6dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/cardSummary">
+
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="16dp"
+            android:scaleType="centerInside"
+            android:src="@drawable/ic_add"
+            app:tint="@color/white" />
+
+    </com.google.android.material.card.MaterialCardView>
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>
