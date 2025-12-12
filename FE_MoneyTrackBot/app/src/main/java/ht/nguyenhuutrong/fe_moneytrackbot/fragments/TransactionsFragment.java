@@ -42,11 +42,10 @@ public class TransactionsFragment extends Fragment {
     List<Transaction> transactionList = new ArrayList<>();
     MaterialCardView btnAddTransaction;
 
-    // Biến lưu trữ danh sách lấy từ Server
     private List<Wallet> serverWallets = new ArrayList<>();
     private List<Category> serverCategories = new ArrayList<>();
 
-    // Biến lưu ID đang chọn (Mặc định -1 là chưa chọn)
+    // Biến lưu ID đang chọn trong Dialog
     private int selectedWalletId = -1;
     private int selectedCategoryId = -1;
 
@@ -59,32 +58,33 @@ public class TransactionsFragment extends Fragment {
         btnAddTransaction = view.findViewById(R.id.btnAddTransaction);
         rcv.setLayoutManager(new LinearLayoutManager(getContext()));
 
-        adapter = new TransactionsAdapter(transactionList);
+        // ✅ Cập nhật Adapter với Listener
+        adapter = new TransactionsAdapter(transactionList, transaction -> {
+            // Khi click vào item -> Mở dialog Sửa/Xóa
+            showTransactionDialog(transaction);
+        });
         rcv.setAdapter(adapter);
 
-        // Gọi API tải dữ liệu ngay khi vào màn hình
         loadTransactions();
         loadWalletsFromServer();
         loadCategoriesFromServer();
 
-        btnAddTransaction.setOnClickListener(v -> showAddTransactionDialog());
+        // Khi bấm nút thêm -> Mở dialog Thêm mới (truyền null)
+        btnAddTransaction.setOnClickListener(v -> showTransactionDialog(null));
 
         return view;
     }
 
-    // --- CÁC HÀM GỌI API ---
-
+    // --- CÁC HÀM API LOAD DỮ LIỆU ---
     private void loadWalletsFromServer() {
         if (getContext() == null) return;
         RetrofitClient.getApiService(getContext()).getWallets().enqueue(new Callback<List<Wallet>>() {
             @Override
             public void onResponse(Call<List<Wallet>> call, Response<List<Wallet>> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    serverWallets = response.body();
-                }
+                if (response.isSuccessful() && response.body() != null) serverWallets = response.body();
             }
             @Override
-            public void onFailure(Call<List<Wallet>> call, Throwable t) { Log.e("API", "Lỗi lấy ví"); }
+            public void onFailure(Call<List<Wallet>> call, Throwable t) {}
         });
     }
 
@@ -93,12 +93,10 @@ public class TransactionsFragment extends Fragment {
         RetrofitClient.getApiService(getContext()).getCategories().enqueue(new Callback<List<Category>>() {
             @Override
             public void onResponse(Call<List<Category>> call, Response<List<Category>> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    serverCategories = response.body();
-                }
+                if (response.isSuccessful() && response.body() != null) serverCategories = response.body();
             }
             @Override
-            public void onFailure(Call<List<Category>> call, Throwable t) { Log.e("API", "Lỗi lấy danh mục"); }
+            public void onFailure(Call<List<Category>> call, Throwable t) {}
         });
     }
 
@@ -119,159 +117,198 @@ public class TransactionsFragment extends Fragment {
         });
     }
 
-    // --- HIỂN THỊ DIALOG ---
-
-    private void showAddTransactionDialog() {
+    // --- 🔥 HÀM HIỂN THỊ DIALOG CHUNG (THÊM & SỬA) ---
+    private void showTransactionDialog(@Nullable Transaction existingTransaction) {
         if (getContext() == null) return;
 
-        // Kiểm tra dữ liệu đã tải xong chưa
+        // Check dữ liệu trước
         if (serverWallets.isEmpty() || serverCategories.isEmpty()) {
-            Toast.makeText(getContext(), "Đang tải dữ liệu Ví & Danh mục...", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), "Đang tải dữ liệu...", Toast.LENGTH_SHORT).show();
             loadWalletsFromServer();
             loadCategoriesFromServer();
             return;
         }
 
         View dialogView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_add_transaction, null);
+
         EditText etAmount = dialogView.findViewById(R.id.et_amount);
         EditText etNote = dialogView.findViewById(R.id.et_note);
-
-        // Ánh xạ các View quan trọng
         RadioGroup rgType = dialogView.findViewById(R.id.rg_type);
         AutoCompleteTextView autoCategory = dialogView.findViewById(R.id.auto_complete_category);
         AutoCompleteTextView autoWallet = dialogView.findViewById(R.id.auto_complete_wallet);
 
-        // --- 1. Xử lý Logic lọc Danh mục (Chi tiêu / Thu nhập) ---
+        // 1. Phân loại danh sách Category
         List<Category> expenseList = new ArrayList<>();
         List<Category> incomeList = new ArrayList<>();
-
-        // Tách danh sách gốc thành 2 list riêng
         for (Category c : serverCategories) {
-            if ("income".equals(c.getType())) {
-                incomeList.add(c);
-            } else {
-                expenseList.add(c); // Còn lại là expense
-            }
+            if ("income".equals(c.getType())) incomeList.add(c);
+            else expenseList.add(c);
         }
 
-        // Hàm cập nhật Dropdown khi bấm RadioButton
+        // 2. Logic cập nhật Dropdown Category
         final Runnable updateCategoryDropdown = () -> {
-            List<Category> filteredList;
-            // Kiểm tra nút nào đang được chọn
-            if (rgType.getCheckedRadioButtonId() == R.id.rb_income) {
-                filteredList = incomeList;
-            } else {
-                filteredList = expenseList;
-            }
-
-            // Đổ dữ liệu mới vào Adapter
+            List<Category> filteredList = (rgType.getCheckedRadioButtonId() == R.id.rb_income) ? incomeList : expenseList;
             ArrayAdapter<Category> adapterCat = new ArrayAdapter<>(getContext(), android.R.layout.simple_dropdown_item_1line, filteredList);
             autoCategory.setAdapter(adapterCat);
 
-            // Reset lựa chọn cũ (để tránh hiển thị sai)
-            autoCategory.setText("", false);
-            selectedCategoryId = -1;
-
-            // Nếu có dữ liệu, tự chọn cái đầu tiên cho tiện
-            if (!filteredList.isEmpty()) {
-                autoCategory.setText(filteredList.get(0).getName(), false);
-                selectedCategoryId = filteredList.get(0).getId();
-            } else {
-                autoCategory.setHint("Chưa có danh mục loại này");
+            // Nếu đang sửa và loại trùng khớp -> giữ nguyên, ngược lại reset
+            // (Đơn giản hóa: reset text nếu người dùng tự đổi loại)
+            if (existingTransaction == null) {
+                autoCategory.setText("", false);
+                selectedCategoryId = -1;
             }
         };
 
-        // Bắt sự kiện khi người dùng chuyển đổi Thu / Chi
-        rgType.setOnCheckedChangeListener((group, checkedId) -> {
-            updateCategoryDropdown.run();
-        });
+        rgType.setOnCheckedChangeListener((group, checkedId) -> updateCategoryDropdown.run());
+        autoCategory.setOnItemClickListener((p, v, pos, id) -> selectedCategoryId = ((Category)p.getItemAtPosition(pos)).getId());
 
-        // Chạy lần đầu tiên (Mặc định là Chi tiêu)
-        updateCategoryDropdown.run();
-
-        // Bắt sự kiện khi chọn 1 dòng trong Dropdown Danh mục
-        autoCategory.setOnItemClickListener((parent, view, position, id) -> {
-            Category selectedCat = (Category) parent.getItemAtPosition(position);
-            selectedCategoryId = selectedCat.getId();
-        });
-
-
-        // --- 2. Cấu hình Dropdown VÍ ---
+        // 3. Setup Dropdown Wallet
         ArrayAdapter<Wallet> adapterWallet = new ArrayAdapter<>(getContext(), android.R.layout.simple_dropdown_item_1line, serverWallets);
         autoWallet.setAdapter(adapterWallet);
+        autoWallet.setOnItemClickListener((p, v, pos, id) -> selectedWalletId = ((Wallet)p.getItemAtPosition(pos)).getId());
 
-        // Mặc định chọn ví đầu tiên
-        if (!serverWallets.isEmpty()) {
-            autoWallet.setText(serverWallets.get(0).getName(), false);
-            selectedWalletId = serverWallets.get(0).getId();
+        // 4. --- ĐIỀN DỮ LIỆU CŨ (CHẾ ĐỘ SỬA) ---
+        if (existingTransaction != null) {
+            etAmount.setText(String.valueOf((long)Math.abs(existingTransaction.getAmount()))); // Lấy trị tuyệt đối
+            etNote.setText(existingTransaction.getNote());
+
+            // Tìm và điền Wallet
+            for (Wallet w : serverWallets) {
+                if (w.getId() == existingTransaction.getWalletId()) {
+                    autoWallet.setText(w.getName(), false);
+                    selectedWalletId = w.getId();
+                    break;
+                }
+            }
+
+            // Tìm và điền Category + Loại
+            for (Category c : serverCategories) {
+                if (c.getId() == existingTransaction.getCategoryId()) {
+                    // Set đúng RadioButton
+                    if ("income".equals(c.getType())) {
+                        rgType.check(R.id.rb_income);
+                    } else {
+                        rgType.check(R.id.rb_expense);
+                    }
+
+                    // Cập nhật adapter cho dropdown trước khi set text
+                    updateCategoryDropdown.run();
+
+                    // Set text category
+                    autoCategory.setText(c.getName(), false);
+                    selectedCategoryId = c.getId();
+                    break;
+                }
+            }
+        } else {
+            // Chế độ THÊM: Mặc định
+            updateCategoryDropdown.run(); // Chạy để init list
+            // Có thể set default wallet ở đây nếu muốn
         }
 
-        // Bắt sự kiện chọn Ví
-        autoWallet.setOnItemClickListener((parent, view, position, id) -> {
-            Wallet selectedWallet = (Wallet) parent.getItemAtPosition(position);
-            selectedWalletId = selectedWallet.getId();
-        });
+        // 5. Tạo Dialog Builder
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext())
+                .setView(dialogView);
 
-
-        // --- 3. Tạo Dialog ---
-        AlertDialog dialog = new AlertDialog.Builder(getContext())
-                .setView(dialogView)
-                .setPositiveButton("Lưu", (d, w) -> {
-                    String amountStr = etAmount.getText().toString().trim();
-                    String note = etNote.getText().toString().trim();
-
-                    if (amountStr.isEmpty()) {
-                        Toast.makeText(getContext(), "Nhập số tiền!", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-
-                    if (selectedCategoryId == -1) {
-                        Toast.makeText(getContext(), "Vui lòng chọn danh mục!", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-
-                    try {
-                        double amount = Double.parseDouble(amountStr);
-                        String today = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
-
-                        // Gọi API tạo mới
-                        createTransactionOnServer(amount, selectedCategoryId, note, today, selectedWalletId);
-
-                    } catch (NumberFormatException e) {
-                        Toast.makeText(getContext(), "Số tiền lỗi", Toast.LENGTH_SHORT).show();
-                    }
-                })
-                .setNegativeButton("Hủy", null)
-                .create();
-
-        if (dialog.getWindow() != null) {
-            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        if (existingTransaction == null) {
+            // --- NÚT CHO CHẾ ĐỘ THÊM ---
+            builder.setTitle("Thêm Giao Dịch")
+                    .setPositiveButton("Lưu", (d, w) -> saveTransaction(etAmount, etNote, null))
+                    .setNegativeButton("Hủy", null);
+        } else {
+            // --- NÚT CHO CHẾ ĐỘ SỬA ---
+            builder.setTitle("Chi Tiết Giao Dịch")
+                    .setPositiveButton("Cập nhật", (d, w) -> saveTransaction(etAmount, etNote, existingTransaction.getId()))
+                    .setNeutralButton("Xóa", (d, w) -> confirmDelete(existingTransaction.getId()))
+                    .setNegativeButton("Đóng", null);
         }
+
+        AlertDialog dialog = builder.create();
+        if (dialog.getWindow() != null) dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
         dialog.show();
     }
 
-    private void createTransactionOnServer(double amount, int categoryId, String note, String date, int walletId) {
-        // Model Transaction mới nhận int cho categoryId
-        Transaction newTrans = new Transaction(amount, categoryId, note, date, walletId);
+    // --- XỬ LÝ LƯU (CHUNG CHO TẠO VÀ SỬA) ---
+    private void saveTransaction(EditText etAmount, EditText etNote, Integer transactionId) {
+        String amountStr = etAmount.getText().toString().trim();
+        String note = etNote.getText().toString().trim();
 
-        RetrofitClient.getApiService(getContext()).createTransaction(newTrans).enqueue(new Callback<Transaction>() {
+        if (amountStr.isEmpty() || selectedCategoryId == -1 || selectedWalletId == -1) {
+            Toast.makeText(getContext(), "Vui lòng nhập đủ thông tin!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        try {
+            double amount = Double.parseDouble(amountStr);
+            String today = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
+
+            if (transactionId == null) {
+                createTransactionOnServer(amount, selectedCategoryId, note, today, selectedWalletId);
+            } else {
+                updateTransactionOnServer(transactionId, amount, selectedCategoryId, note, today, selectedWalletId);
+            }
+        } catch (NumberFormatException e) {
+            Toast.makeText(getContext(), "Số tiền lỗi", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    // --- API CALLS ---
+    private void createTransactionOnServer(double amount, int catId, String note, String date, int walletId) {
+        Transaction t = new Transaction(amount, catId, note, date, walletId);
+        RetrofitClient.getApiService(getContext()).createTransaction(t).enqueue(new Callback<Transaction>() {
             @Override
             public void onResponse(Call<Transaction> call, Response<Transaction> response) {
                 if (response.isSuccessful()) {
                     Toast.makeText(getContext(), "Thêm thành công!", Toast.LENGTH_SHORT).show();
-                    loadTransactions(); // Load lại list giao dịch
-                } else {
-                    try {
-                        String errorBody = response.errorBody().string();
-                        Log.e("API_ERROR", errorBody);
-                        Toast.makeText(getContext(), "Lỗi: " + errorBody, Toast.LENGTH_LONG).show();
-                    } catch (Exception e) {}
-                }
+                    loadTransactions();
+                } else handleError(response);
             }
             @Override
-            public void onFailure(Call<Transaction> call, Throwable t) {
-                Toast.makeText(getContext(), "Lỗi kết nối", Toast.LENGTH_SHORT).show();
-            }
+            public void onFailure(Call<Transaction> call, Throwable t) {}
         });
+    }
+
+    private void updateTransactionOnServer(int id, double amount, int catId, String note, String date, int walletId) {
+        Transaction t = new Transaction(amount, catId, note, date, walletId);
+        RetrofitClient.getApiService(getContext()).updateTransaction(id, t).enqueue(new Callback<Transaction>() {
+            @Override
+            public void onResponse(Call<Transaction> call, Response<Transaction> response) {
+                if (response.isSuccessful()) {
+                    Toast.makeText(getContext(), "Cập nhật thành công!", Toast.LENGTH_SHORT).show();
+                    loadTransactions();
+                } else handleError(response);
+            }
+            @Override
+            public void onFailure(Call<Transaction> call, Throwable t) {}
+        });
+    }
+
+    private void confirmDelete(int id) {
+        new AlertDialog.Builder(getContext())
+                .setTitle("Xác nhận xóa")
+                .setMessage("Bạn có chắc chắn muốn xóa không?")
+                .setPositiveButton("Xóa", (d, w) -> {
+                    RetrofitClient.getApiService(getContext()).deleteTransaction(id).enqueue(new Callback<Void>() {
+                        @Override
+                        public void onResponse(Call<Void> call, Response<Void> response) {
+                            if (response.isSuccessful()) {
+                                Toast.makeText(getContext(), "Đã xóa!", Toast.LENGTH_SHORT).show();
+                                loadTransactions();
+                            } else handleError(response);
+                        }
+                        @Override
+                        public void onFailure(Call<Void> call, Throwable t) {}
+                    });
+                })
+                .setNegativeButton("Hủy", null)
+                .show();
+    }
+
+    private void handleError(Response<?> response) {
+        try {
+            String err = response.errorBody().string();
+            Log.e("API_ERR", err);
+            Toast.makeText(getContext(), "Lỗi: " + err, Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {}
     }
 }
