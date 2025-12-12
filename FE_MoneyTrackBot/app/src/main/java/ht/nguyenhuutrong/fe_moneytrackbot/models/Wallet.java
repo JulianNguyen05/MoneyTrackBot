@@ -1,15 +1,34 @@
 package ht.nguyenhuutrong.fe_moneytrackbot.models;
 
-public class Wallet {
-    private int id;
-    private String name;
-    private double balance; // Số dư
+import com.google.gson.annotations.SerializedName;
 
-    // --- Constructor ---
+import java.io.Serializable;
+
+public class Wallet implements Serializable {
+
+    // @SerializedName giúp map đúng key JSON từ Server
+    // Ví dụ: JSON trả về {"id": 1, "name": "Ví chính", "balance": 100000}
+
+    @SerializedName("id")
+    private int id;
+
+    @SerializedName("name")
+    private String name;
+
+    @SerializedName("balance")
+    private double balance;
+
+    // --- Constructor 1: Mặc định (bắt buộc cho Gson) ---
     public Wallet() {
-        // Mặc định
     }
 
+    // --- Constructor 2: Dùng khi tạo ví mới (Gửi lên server không cần ID) ---
+    public Wallet(String name, double balance) {
+        this.name = name;
+        this.balance = balance;
+    }
+
+    // --- Constructor 3: Dùng khi nhận dữ liệu đầy đủ từ Server ---
     public Wallet(int id, String name, double balance) {
         this.id = id;
         this.name = name;
@@ -21,18 +40,8 @@ public class Wallet {
     public String getName() { return name; }
     public double getBalance() { return balance; }
 
-    // --- Setters (tùy chọn) ---
+    // --- Setters ---
     public void setId(int id) { this.id = id; }
     public void setName(String name) { this.name = name; }
     public void setBalance(double balance) { this.balance = balance; }
-
-    // --- toString() (dễ debug) ---
-    @Override
-    public String toString() {
-        return "Wallet{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", balance=" + balance +
-                '}';
-    }
 }
