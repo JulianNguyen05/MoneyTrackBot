@@ -8,13 +8,12 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider; // Cần thư viện lifecycle
 
 import com.google.android.material.card.MaterialCardView;
-
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,9 +24,8 @@ import ht.nguyenhuutrong.fe_moneytrackbot.dialogs.AddCategoryDialog;
 import ht.nguyenhuutrong.fe_moneytrackbot.dialogs.WalletDialogs;
 import ht.nguyenhuutrong.fe_moneytrackbot.models.Category;
 import ht.nguyenhuutrong.fe_moneytrackbot.models.Wallet;
-import ht.nguyenhuutrong.fe_moneytrackbot.repository.CategoryRepository;
-import ht.nguyenhuutrong.fe_moneytrackbot.repository.WalletRepository;
 import ht.nguyenhuutrong.fe_moneytrackbot.utils.DateRangeHelper;
+import ht.nguyenhuutrong.fe_moneytrackbot.viewmodels.HomeViewModel; // Import ViewModel
 
 public class HomeFragment extends Fragment {
 
@@ -38,30 +36,55 @@ public class HomeFragment extends Fragment {
     private MaterialCardView cardDateRangePicker;
     private TextView tvSelectedDate;
 
-    private List<Category> allCategories = new ArrayList<>();
-    private String currentType = "expense";
+    // 🔥 Thay thế Repository bằng ViewModel
+    private HomeViewModel viewModel;
 
-    // 🔥 KHAI BÁO 2 REPOSITORY RIÊNG BIỆT (Thay cho HomeRepository)
-    private WalletRepository walletRepo;
-    private CategoryRepository categoryRepo;
+    private String currentType = "expense";
+    private List<Category> allCategories = new ArrayList<>(); // Vẫn giữ tạm để filter hiển thị
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_home, container, false);
 
-        // 🔥 KHỞI TẠO CÁC REPOSITORY
-        walletRepo = new WalletRepository(getContext());
-        categoryRepo = new CategoryRepository(getContext());
+        // 🔥 Khởi tạo ViewModel (Nó sẽ tự giữ kết nối với Repository)
+        viewModel = new ViewModelProvider(this).get(HomeViewModel.class);
 
         initViews(view);
         setupEvents();
 
-        // Load dữ liệu ban đầu
-        loadWallets();
-        loadCategories();
+        // 🔥 LẮNG NGHE DỮ LIỆU TỪ VIEWMODEL (Quan trọng nhất)
+        setupObservers();
+
+        // Yêu cầu ViewModel tải dữ liệu lần đầu
+        viewModel.loadWallets();
+        viewModel.loadCategories();
 
         return view;
+    }
+
+    // --- HÀM MỚI: LẮNG NGHE SỰ THAY ĐỔI DỮ LIỆU ---
+    private void setupObservers() {
+        // 1. Khi danh sách Ví thay đổi -> Tự động vẽ lại
+        viewModel.getWallets().observe(getViewLifecycleOwner(), wallets -> {
+            layoutWalletContainer.removeAllViews();
+            for (Wallet wallet : wallets) addWalletView(wallet);
+            addAddWalletButton();
+        });
+
+        // 2. Khi danh sách Danh mục thay đổi
+        viewModel.getCategories().observe(getViewLifecycleOwner(), categories -> {
+            allCategories.clear();
+            allCategories.addAll(categories);
+            renderCategories(); // Vẽ lại theo filter hiện tại
+        });
+
+        // 3. Khi có lỗi
+        viewModel.getErrorMessage().observe(getViewLifecycleOwner(), msg -> {
+            if (msg != null && !msg.isEmpty()) {
+                Toast.makeText(getContext(), msg, Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void initViews(View view) {
@@ -84,8 +107,7 @@ public class HomeFragment extends Fragment {
         btnFilterIncome.setOnClickListener(v -> changeFilter("income"));
     }
 
-    // ================== LOGIC DANH MỤC (Dùng CategoryRepository) ==================
-
+    // --- LOGIC DANH MỤC ---
     private void changeFilter(String type) {
         currentType = type;
         updateFilterUI();
@@ -99,24 +121,6 @@ public class HomeFragment extends Fragment {
         btnFilterExpense.setTextColor(isExpense ? Color.WHITE : Color.BLACK);
         btnFilterIncome.setBackgroundResource(!isExpense ? R.drawable.bg_button_gradient_teal : R.drawable.bg_gray_rounded);
         btnFilterIncome.setTextColor(!isExpense ? Color.WHITE : Color.BLACK);
-    }
-
-    private void loadCategories() {
-        // Gọi API lấy danh mục qua categoryRepo
-        categoryRepo.getCategories(new CategoryRepository.CategoryCallback() {
-            @Override
-            public void onSuccess(List<Category> categories) {
-                allCategories.clear();
-                allCategories.addAll(categories);
-                renderCategories();
-            }
-
-            @Override
-            public void onError(String message) {
-                // Có thể hiện Toast báo lỗi hoặc chỉ render list rỗng
-                renderCategories();
-            }
-        });
     }
 
     private void renderCategories() {
@@ -142,37 +146,15 @@ public class HomeFragment extends Fragment {
         if (btnAdd != null) {
             btnAdd.setOnClickListener(v ->
                     AddCategoryDialog.show(getContext(), currentType, (name, type) -> {
-                        // Gọi Repository tạo danh mục
-                        categoryRepo.createCategory(name, type, () -> {
-                            Toast.makeText(getContext(), "Đã thêm!", Toast.LENGTH_SHORT).show();
-                            loadCategories();
-                        });
+                        // 🔥 Gọi ViewModel thay vì Repository
+                        viewModel.createCategory(name, type);
                     })
             );
         }
         layoutCategoryContainer.addView(itemAdd);
     }
 
-    // ================== LOGIC VÍ (Dùng WalletRepository) ==================
-
-    private void loadWallets() {
-        // Gọi API lấy ví qua walletRepo
-        walletRepo.getWallets(new WalletRepository.WalletCallback() {
-            @Override
-            public void onSuccess(List<Wallet> wallets) {
-                if (getContext() == null) return;
-                layoutWalletContainer.removeAllViews();
-                for (Wallet wallet : wallets) addWalletView(wallet);
-                addAddWalletButton();
-            }
-
-            @Override
-            public void onError(String message) {
-                if (getContext() != null) addAddWalletButton();
-            }
-        });
-    }
-
+    // --- LOGIC VÍ ---
     private void addWalletView(Wallet wallet) {
         if (getContext() == null) return;
         View itemView = LayoutInflater.from(getContext()).inflate(R.layout.item_wallet, layoutWalletContainer, false);
@@ -186,14 +168,14 @@ public class HomeFragment extends Fragment {
         card.setOnClickListener(v -> {
             selectWallet(card);
             WalletDialogs.showUpdateDelete(getContext(), wallet, new WalletDialogs.OnWalletActionListener() {
-                @Override public void onCreate(String n, double b) {} // Không dùng
+                @Override public void onCreate(String n, double b) {}
                 @Override public void onUpdate(Wallet w) {
-                    // Gọi update qua Repo
-                    walletRepo.updateWallet(w, () -> loadWallets());
+                    // 🔥 Gọi ViewModel
+                    viewModel.updateWallet(w);
                 }
                 @Override public void onDelete(int id) {
-                    // Gọi delete qua Repo
-                    walletRepo.deleteWallet(id, () -> loadWallets());
+                    // 🔥 Gọi ViewModel
+                    viewModel.deleteWallet(id);
                 }
             });
         });
@@ -205,11 +187,11 @@ public class HomeFragment extends Fragment {
         itemAdd.findViewById(R.id.card_add_wallet).setOnClickListener(v ->
                 WalletDialogs.showAddWallet(getContext(), new WalletDialogs.OnWalletActionListener() {
                     @Override public void onCreate(String name, double balance) {
-                        // Gọi create qua Repo
-                        walletRepo.createWallet(name, balance, () -> loadWallets());
+                        // 🔥 Gọi ViewModel
+                        viewModel.createWallet(name, balance);
                     }
-                    @Override public void onUpdate(Wallet w) {} // Không dùng
-                    @Override public void onDelete(int id) {} // Không dùng
+                    @Override public void onUpdate(Wallet w) {}
+                    @Override public void onDelete(int id) {}
                 })
         );
         layoutWalletContainer.addView(itemAdd);
