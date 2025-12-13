@@ -1,6 +1,8 @@
 package ht.nguyenhuutrong.fe_moneytrackbot.viewmodels;
 
 import android.app.Application;
+import android.util.Patterns;
+
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
@@ -8,46 +10,43 @@ import androidx.lifecycle.MutableLiveData;
 
 import ht.nguyenhuutrong.fe_moneytrackbot.repository.AuthRepository;
 
-public class LoginViewModel extends AndroidViewModel {
+public class RegisterViewModel extends AndroidViewModel {
 
     private final AuthRepository authRepository;
 
-    // LiveData để báo trạng thái về cho Activity
-    private final MutableLiveData<Boolean> loginSuccess = new MutableLiveData<>();
+    private final MutableLiveData<Boolean> registerSuccess = new MutableLiveData<>();
     private final MutableLiveData<String> errorMessage = new MutableLiveData<>();
     private final MutableLiveData<Boolean> isLoading = new MutableLiveData<>();
 
-    public LoginViewModel(@NonNull Application application) {
+    public RegisterViewModel(@NonNull Application application) {
         super(application);
         authRepository = new AuthRepository(application);
     }
 
     // Getters
-    public LiveData<Boolean> getLoginSuccess() { return loginSuccess; }
+    public LiveData<Boolean> getRegisterSuccess() { return registerSuccess; }
     public LiveData<String> getErrorMessage() { return errorMessage; }
     public LiveData<Boolean> getIsLoading() { return isLoading; }
 
-    // Kiểm tra đăng nhập sẵn
-    public boolean isUserLoggedIn() {
-        return authRepository.isLoggedIn();
-    }
+    public void register(String username, String email, String password) {
+        // 1. Validate dữ liệu
+        if (username.isEmpty() || email.isEmpty() || password.isEmpty()) {
+            errorMessage.setValue("Vui lòng nhập đủ thông tin");
+            return;
+        }
 
-    public void login(String username, String password) {
-        // 1. Validate đơn giản
-        if (username.isEmpty() || password.isEmpty()) {
-            errorMessage.setValue("Vui lòng nhập đầy đủ thông tin");
+        if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            errorMessage.setValue("Email không hợp lệ");
             return;
         }
 
         // 2. Gọi Repository
-        isLoading.setValue(true); // Hiển thị loading
-
-        // 🔥 CẬP NHẬT: Dùng AuthCallback thay vì LoginCallback
-        authRepository.login(username, password, new AuthRepository.AuthCallback() {
+        isLoading.setValue(true);
+        authRepository.register(username, email, password, new AuthRepository.AuthCallback() {
             @Override
             public void onSuccess() {
                 isLoading.setValue(false);
-                loginSuccess.setValue(true);
+                registerSuccess.setValue(true);
             }
 
             @Override
