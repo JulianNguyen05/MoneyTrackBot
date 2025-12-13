@@ -5,7 +5,19 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="2d3c3080-0e50-4bf8-9897-15689bd616fa" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/../FE_MoneyTrackBot/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../FE_MoneyTrackBot/.idea/misc.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/java/ht/nguyenhuutrong/fe_moneytrackbot/dialogs/SettingsDialogHelper.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/java/ht/nguyenhuutrong/fe_moneytrackbot/helpers/SettingsUIManager.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/java/ht/nguyenhuutrong/fe_moneytrackbot/viewmodels/SettingsViewModel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/java/ht/nguyenhuutrong/fe_moneytrackbot/dialogs/WalletDialogs.java" beforeDir="false" afterPath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/java/ht/nguyenhuutrong/fe_moneytrackbot/dialogs/WalletDialog.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/java/ht/nguyenhuutrong/fe_moneytrackbot/fragments/HomeFragment.java" beforeDir="false" afterPath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/java/ht/nguyenhuutrong/fe_moneytrackbot/fragments/HomeFragment.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/java/ht/nguyenhuutrong/fe_moneytrackbot/fragments/TransactionsFragment.java" beforeDir="false" afterPath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/java/ht/nguyenhuutrong/fe_moneytrackbot/fragments/TransactionsFragment.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/java/ht/nguyenhuutrong/fe_moneytrackbot/helpers/CategoryRenderer.java" beforeDir="false" afterPath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/java/ht/nguyenhuutrong/fe_moneytrackbot/renderers/CategoryRenderer.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/java/ht/nguyenhuutrong/fe_moneytrackbot/helpers/HomeUIManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/java/ht/nguyenhuutrong/fe_moneytrackbot/renderers/HomeUIManager.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/java/ht/nguyenhuutrong/fe_moneytrackbot/helpers/TransactionRenderer.java" beforeDir="false" afterPath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/java/ht/nguyenhuutrong/fe_moneytrackbot/renderers/TransactionRenderer.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/java/ht/nguyenhuutrong/fe_moneytrackbot/helpers/WalletRenderer.java" beforeDir="false" afterPath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/java/ht/nguyenhuutrong/fe_moneytrackbot/renderers/WalletRenderer.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/java/ht/nguyenhuutrong/fe_moneytrackbot/utils/DateRangeHelper.java" beforeDir="false" afterPath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/java/ht/nguyenhuutrong/fe_moneytrackbot/dialogs/DateRangeDialog.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/java/ht/nguyenhuutrong/fe_moneytrackbot/utils/TransactionDialogHelper.java" beforeDir="false" afterPath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/java/ht/nguyenhuutrong/fe_moneytrackbot/dialogs/TransactionDialog.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -77,7 +89,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1765377148584</updated>
-      <workItem from="1765602068635" duration="372000" />
+      <workItem from="1765602068635" duration="2102000" />
     </task>
     <servers />
   </component>

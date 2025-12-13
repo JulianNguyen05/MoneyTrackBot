@@ -1,4 +1,4 @@
-package ht.nguyenhuutrong.fe_moneytrackbot.utils;
+package ht.nguyenhuutrong.fe_moneytrackbot.dialogs;
 
 import androidx.core.util.Pair;
 import androidx.fragment.app.FragmentManager;
@@ -7,7 +7,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-public class DateRangeHelper {
+public class DateRangeDialog {
 
     // Interface để trả kết quả về cho Fragment
     public interface OnDateSelectedListener {

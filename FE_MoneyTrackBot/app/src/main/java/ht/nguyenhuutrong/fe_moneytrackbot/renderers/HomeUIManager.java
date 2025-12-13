@@ -1,4 +1,4 @@
-package ht.nguyenhuutrong.fe_moneytrackbot.helpers;
+package ht.nguyenhuutrong.fe_moneytrackbot.renderers;
 
 import android.content.Context;
 import android.view.View;
@@ -13,7 +13,7 @@ import java.util.List;
 import ht.nguyenhuutrong.fe_moneytrackbot.R;
 import ht.nguyenhuutrong.fe_moneytrackbot.models.Category;
 import ht.nguyenhuutrong.fe_moneytrackbot.models.Wallet;
-import ht.nguyenhuutrong.fe_moneytrackbot.utils.DateRangeHelper;
+import ht.nguyenhuutrong.fe_moneytrackbot.dialogs.DateRangeDialog;
 
 public class HomeUIManager {
 
@@ -61,7 +61,7 @@ public class HomeUIManager {
     }
 
     private void showDatePicker() {
-        DateRangeHelper.show(fragmentManager, (text, start, end) -> tvSelectedDate.setText(text));
+        DateRangeDialog.show(fragmentManager, (text, start, end) -> tvSelectedDate.setText(text));
     }
 
     private void changeCategoryFilter(String type) {

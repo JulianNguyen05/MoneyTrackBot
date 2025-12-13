@@ -1,4 +1,4 @@
-package ht.nguyenhuutrong.fe_moneytrackbot.helpers;
+package ht.nguyenhuutrong.fe_moneytrackbot.renderers;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Locale;
 
 import ht.nguyenhuutrong.fe_moneytrackbot.R;
-import ht.nguyenhuutrong.fe_moneytrackbot.dialogs.WalletDialogs;
+import ht.nguyenhuutrong.fe_moneytrackbot.dialogs.WalletDialog;
 import ht.nguyenhuutrong.fe_moneytrackbot.models.Wallet;
 
 public class WalletRenderer {
@@ -53,7 +53,7 @@ public class WalletRenderer {
 
         card.setOnClickListener(v -> {
             selectWallet(card);
-            WalletDialogs.showUpdateDelete(context, wallet, new WalletDialogs.OnWalletActionListener() {
+            WalletDialog.showUpdateDelete(context, wallet, new WalletDialog.OnWalletActionListener() {
                 @Override public void onCreate(String n, double b) {}
                 @Override public void onUpdate(Wallet w) { listener.onUpdate(w); }
                 @Override public void onDelete(int id) { listener.onDelete(id); }
@@ -65,7 +65,7 @@ public class WalletRenderer {
     private void addAddButton(WalletActionListener listener) {
         View itemAdd = LayoutInflater.from(context).inflate(R.layout.item_add_wallet, container, false);
         itemAdd.findViewById(R.id.card_add_wallet).setOnClickListener(v ->
-                WalletDialogs.showAddWallet(context, new WalletDialogs.OnWalletActionListener() {
+                WalletDialog.showAddWallet(context, new WalletDialog.OnWalletActionListener() {
                     @Override public void onCreate(String name, double balance) { listener.onCreate(name, balance); }
                     @Override public void onUpdate(Wallet w) {}
                     @Override public void onDelete(int id) {}

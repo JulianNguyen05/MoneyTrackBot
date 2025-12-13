@@ -1,4 +1,4 @@
-package ht.nguyenhuutrong.fe_moneytrackbot.helpers;
+package ht.nguyenhuutrong.fe_moneytrackbot.renderers;
 
 import android.content.Context;
 import androidx.recyclerview.widget.LinearLayoutManager;

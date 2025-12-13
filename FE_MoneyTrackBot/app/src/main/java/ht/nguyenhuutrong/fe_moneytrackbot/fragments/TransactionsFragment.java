@@ -18,8 +18,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ht.nguyenhuutrong.fe_moneytrackbot.R;
-import ht.nguyenhuutrong.fe_moneytrackbot.utils.TransactionDialogHelper;
-import ht.nguyenhuutrong.fe_moneytrackbot.helpers.TransactionRenderer;
+import ht.nguyenhuutrong.fe_moneytrackbot.dialogs.TransactionDialog;
+import ht.nguyenhuutrong.fe_moneytrackbot.renderers.TransactionRenderer;
 import ht.nguyenhuutrong.fe_moneytrackbot.models.Category;
 import ht.nguyenhuutrong.fe_moneytrackbot.models.Transaction;
 import ht.nguyenhuutrong.fe_moneytrackbot.models.Wallet;
@@ -71,8 +71,8 @@ public class TransactionsFragment extends Fragment {
 
     private void showDialog(Transaction existingTransaction) {
         if (getContext() == null) return;
-        TransactionDialogHelper.show(getContext(), existingTransaction, cachedWallets, cachedCategories,
-                new TransactionDialogHelper.DialogListener() {
+        TransactionDialog.show(getContext(), existingTransaction, cachedWallets, cachedCategories,
+                new TransactionDialog.DialogListener() {
                     @Override public void onSave(Transaction t, Integer id) {
                         if (id == null) viewModel.createTransaction(t);
                         else viewModel.updateTransaction(id, t);

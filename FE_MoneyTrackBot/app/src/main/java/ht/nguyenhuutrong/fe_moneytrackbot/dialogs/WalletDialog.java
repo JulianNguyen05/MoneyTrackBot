@@ -8,7 +8,7 @@ import android.widget.EditText;
 import ht.nguyenhuutrong.fe_moneytrackbot.R;
 import ht.nguyenhuutrong.fe_moneytrackbot.models.Wallet;
 
-public class WalletDialogs {
+public class WalletDialog {
 
     public interface OnWalletActionListener {
         void onCreate(String name, double balance);

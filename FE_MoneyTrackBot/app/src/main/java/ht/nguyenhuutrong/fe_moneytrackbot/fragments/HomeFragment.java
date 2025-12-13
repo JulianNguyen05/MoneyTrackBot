@@ -12,8 +12,8 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
 import ht.nguyenhuutrong.fe_moneytrackbot.R;
-import ht.nguyenhuutrong.fe_moneytrackbot.helpers.HomeUIManager;
-import ht.nguyenhuutrong.fe_moneytrackbot.helpers.WalletRenderer;
+import ht.nguyenhuutrong.fe_moneytrackbot.renderers.HomeUIManager;
+import ht.nguyenhuutrong.fe_moneytrackbot.renderers.WalletRenderer;
 import ht.nguyenhuutrong.fe_moneytrackbot.models.Wallet;
 import ht.nguyenhuutrong.fe_moneytrackbot.viewmodels.HomeViewModel;
 

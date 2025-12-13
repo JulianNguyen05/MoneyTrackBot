@@ -1,4 +1,4 @@
-package ht.nguyenhuutrong.fe_moneytrackbot.utils;
+package ht.nguyenhuutrong.fe_moneytrackbot.dialogs;
 
 import android.app.AlertDialog;
 import android.content.Context;
@@ -21,7 +21,7 @@ import ht.nguyenhuutrong.fe_moneytrackbot.models.Category;
 import ht.nguyenhuutrong.fe_moneytrackbot.models.Transaction;
 import ht.nguyenhuutrong.fe_moneytrackbot.models.Wallet;
 
-public class TransactionDialogHelper {
+public class TransactionDialog {
 
     public interface DialogListener {
         void onSave(Transaction t, Integer id);
