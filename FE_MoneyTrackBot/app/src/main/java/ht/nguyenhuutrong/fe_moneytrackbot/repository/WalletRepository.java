@@ -2,6 +2,7 @@ package ht.nguyenhuutrong.fe_moneytrackbot.repository;
 
 import android.content.Context;
 import java.util.List;
+
 import ht.nguyenhuutrong.fe_moneytrackbot.api.RetrofitClient;
 import ht.nguyenhuutrong.fe_moneytrackbot.models.Wallet;
 import retrofit2.Call;
@@ -16,19 +17,28 @@ public class WalletRepository {
         this.context = context;
     }
 
+    // Callback cho việc lấy danh sách
     public interface WalletCallback {
         void onSuccess(List<Wallet> wallets);
         void onError(String message);
     }
 
+    // 🔥 MỚI: Callback cho các hành động Thêm/Sửa/Xóa (để bắt lỗi)
+    public interface WalletActionCallback {
+        void onSuccess();
+        void onError(String message);
+    }
+
+    // 1. Lấy danh sách ví
     public void getWallets(WalletCallback callback) {
-        RetrofitClient.getApiService(context).getWallets().enqueue(new Callback<List<Wallet>>() {
+        // 🔥 CẬP NHẬT: Gọi qua getWalletService()
+        RetrofitClient.getWalletService(context).getWallets().enqueue(new Callback<List<Wallet>>() {
             @Override
             public void onResponse(Call<List<Wallet>> call, Response<List<Wallet>> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     callback.onSuccess(response.body());
                 } else {
-                    callback.onError("Lỗi tải ví: " + response.code());
+                    callback.onError("Lỗi tải ví: " + response.message());
                 }
             }
             @Override
@@ -38,36 +48,60 @@ public class WalletRepository {
         });
     }
 
-    public void createWallet(String name, double balance, Runnable onSuccess) {
-        RetrofitClient.getApiService(context).createWallet(new Wallet(name, balance)).enqueue(new Callback<Wallet>() {
+    // 2. Tạo ví mới
+    public void createWallet(String name, double balance, WalletActionCallback callback) {
+        // 🔥 CẬP NHẬT: Gọi qua getWalletService()
+        RetrofitClient.getWalletService(context).createWallet(new Wallet(name, balance)).enqueue(new Callback<Wallet>() {
             @Override
             public void onResponse(Call<Wallet> call, Response<Wallet> response) {
-                if (response.isSuccessful()) onSuccess.run();
+                if (response.isSuccessful()) {
+                    callback.onSuccess();
+                } else {
+                    callback.onError("Lỗi tạo ví: " + response.message());
+                }
             }
             @Override
-            public void onFailure(Call<Wallet> call, Throwable t) {}
+            public void onFailure(Call<Wallet> call, Throwable t) {
+                callback.onError(t.getMessage());
+            }
         });
     }
 
-    public void updateWallet(Wallet wallet, Runnable onSuccess) {
-        RetrofitClient.getApiService(context).updateWallet(wallet.getId(), wallet).enqueue(new Callback<Wallet>() {
+    // 3. Cập nhật ví
+    public void updateWallet(Wallet wallet, WalletActionCallback callback) {
+        // 🔥 CẬP NHẬT: Gọi qua getWalletService()
+        RetrofitClient.getWalletService(context).updateWallet(wallet.getId(), wallet).enqueue(new Callback<Wallet>() {
             @Override
             public void onResponse(Call<Wallet> call, Response<Wallet> response) {
-                if (response.isSuccessful()) onSuccess.run();
+                if (response.isSuccessful()) {
+                    callback.onSuccess();
+                } else {
+                    callback.onError("Lỗi cập nhật: " + response.message());
+                }
             }
             @Override
-            public void onFailure(Call<Wallet> call, Throwable t) {}
+            public void onFailure(Call<Wallet> call, Throwable t) {
+                callback.onError(t.getMessage());
+            }
         });
     }
 
-    public void deleteWallet(int id, Runnable onSuccess) {
-        RetrofitClient.getApiService(context).deleteWallet(id).enqueue(new Callback<Void>() {
+    // 4. Xóa ví
+    public void deleteWallet(int id, WalletActionCallback callback) {
+        // 🔥 CẬP NHẬT: Gọi qua getWalletService()
+        RetrofitClient.getWalletService(context).deleteWallet(id).enqueue(new Callback<Void>() {
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {
-                if (response.isSuccessful()) onSuccess.run();
+                if (response.isSuccessful()) {
+                    callback.onSuccess();
+                } else {
+                    callback.onError("Lỗi xóa: " + response.message());
+                }
             }
             @Override
-            public void onFailure(Call<Void> call, Throwable t) {}
+            public void onFailure(Call<Void> call, Throwable t) {
+                callback.onError(t.getMessage());
+            }
         });
     }
 }

@@ -5,71 +5,52 @@ import android.os.Bundle;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import ht.nguyenhuutrong.fe_moneytrackbot.R;
-import ht.nguyenhuutrong.fe_moneytrackbot.api.TokenManager;
-import ht.nguyenhuutrong.fe_moneytrackbot.fragments.HomeFragment;
-import ht.nguyenhuutrong.fe_moneytrackbot.fragments.TransactionsFragment;
-import ht.nguyenhuutrong.fe_moneytrackbot.fragments.ChatBotFragment;
-import ht.nguyenhuutrong.fe_moneytrackbot.fragments.SettingsFragment;
+import ht.nguyenhuutrong.fe_moneytrackbot.helpers.MainNavigationHelper;
+import ht.nguyenhuutrong.fe_moneytrackbot.viewmodels.MainViewModel;
 
 public class MainActivity extends AppCompatActivity {
 
-    private BottomNavigationView bottomNavigationView;
-    private TokenManager tokenManager;
+    private MainViewModel viewModel;
+    private MainNavigationHelper navigationHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // --- Kiểm tra Login ---
-        tokenManager = TokenManager.getInstance(this);
-        String token = tokenManager.getToken();
+        // 1. Init ViewModel & Kiểm tra đăng nhập
+        viewModel = new ViewModelProvider(this).get(MainViewModel.class);
 
-        if (token == null || token.isEmpty()) {
-            Toast.makeText(this, "Vui lòng đăng nhập!", Toast.LENGTH_SHORT).show();
-            startActivity(new Intent(this, LoginActivity.class));
-            finish();
+        if (!viewModel.isUserLoggedIn()) {
+            navigateToLogin();
             return;
         }
 
-        bottomNavigationView = findViewById(R.id.bottom_navigation);
+        // 2. Setup Navigation Helper
+        navigationHelper = new MainNavigationHelper(getSupportFragmentManager(), R.id.fragment_container);
+        BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_navigation);
 
-        // --- Mặc định mở HomeFragment ---
-        replaceFragment(new HomeFragment());
-        bottomNavigationView.setSelectedItemId(R.id.nav_home);
+        // 3. Setup Logic chuyển tab
+        bottomNavigationView.setOnItemSelectedListener(item ->
+                navigationHelper.onItemSelected(item.getItemId())
+        );
 
-        // --- Bắt chọn menu bottom navigation ---
-        // FIX: Replaced switch statement with if-else if
-        bottomNavigationView.setOnItemSelectedListener(item -> {
-            Fragment selectedFragment = null;
-            int itemId = item.getItemId();
-
-            if (itemId == R.id.nav_home) {
-                selectedFragment = new HomeFragment();
-            } else if (itemId == R.id.nav_transactions) {
-                selectedFragment = new TransactionsFragment();
-            } else if (itemId == R.id.nav_chatbot) {
-                selectedFragment = new ChatBotFragment();
-            } else if (itemId == R.id.nav_settings) {
-                selectedFragment = new SettingsFragment();
-            }
-
-            if (selectedFragment != null) {
-                replaceFragment(selectedFragment);
-            }
-            return true;
-        });
+        // 4. Load mặc định Home nếu chưa có savedState (tránh load lại khi xoay màn hình)
+        if (savedInstanceState == null) {
+            navigationHelper.loadDefaultFragment();
+            bottomNavigationView.setSelectedItemId(R.id.nav_home);
+        }
     }
 
-    private void replaceFragment(Fragment fragment) {
-        getSupportFragmentManager()
-                .beginTransaction()
-                .replace(R.id.fragment_container, fragment)
-                .commit();
+    private void navigateToLogin() {
+        Toast.makeText(this, "Vui lòng đăng nhập!", Toast.LENGTH_SHORT).show();
+        Intent intent = new Intent(this, LoginActivity.class);
+        startActivity(intent);
+        finish();
     }
 }

@@ -2,32 +2,33 @@ package ht.nguyenhuutrong.fe_moneytrackbot.api;
 
 import android.content.Context;
 
-import java.io.IOException;
-
-import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
-import okhttp3.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
+// 🔥 IMPORT CÁC SERVICE MỚI TỪ PACKAGE api.services
+import ht.nguyenhuutrong.fe_moneytrackbot.api.services.AuthService;
+import ht.nguyenhuutrong.fe_moneytrackbot.api.services.CategoryService;
+import ht.nguyenhuutrong.fe_moneytrackbot.api.services.ChatbotService;
+import ht.nguyenhuutrong.fe_moneytrackbot.api.services.ReportService;
+import ht.nguyenhuutrong.fe_moneytrackbot.api.services.TransactionService;
+import ht.nguyenhuutrong.fe_moneytrackbot.api.services.WalletService;
+
 public class RetrofitClient {
 
-//    private static final String BASE_URL = "https://moneytrackbot.onrender.com/";
+    // private static final String BASE_URL = "https://moneytrackbot.onrender.com/";
     private static final String BASE_URL = "http://10.0.2.2:8000/";
 
     private static Retrofit retrofit;
 
-    public static Retrofit getClient(Context context) {
-
+    // Hàm khởi tạo Retrofit (Giữ nguyên logic thêm Token)
+    private static Retrofit getClient(Context context) {
         if (retrofit == null) {
-
-            // 🔥 Lấy singleton đúng cách
             final TokenManager tokenManager = TokenManager.getInstance(context);
 
             OkHttpClient httpClient = new OkHttpClient.Builder()
                     .addInterceptor(chain -> {
-
                         Request original = chain.request();
                         String token = tokenManager.getToken();
 
@@ -37,7 +38,6 @@ public class RetrofitClient {
                                     .build();
                             return chain.proceed(newRequest);
                         }
-
                         return chain.proceed(original);
                     })
                     .build();
@@ -48,11 +48,34 @@ public class RetrofitClient {
                     .addConverterFactory(GsonConverterFactory.create())
                     .build();
         }
-
         return retrofit;
     }
 
-    public static ApiService getApiService(Context context) {
-        return getClient(context).create(ApiService.class);
+    // ==========================================================
+    // 🚀 CÁC HÀM GET SERVICE (Đã tách nhỏ)
+    // ==========================================================
+
+    public static AuthService getAuthService(Context context) {
+        return getClient(context).create(AuthService.class);
+    }
+
+    public static TransactionService getTransactionService(Context context) {
+        return getClient(context).create(TransactionService.class);
+    }
+
+    public static WalletService getWalletService(Context context) {
+        return getClient(context).create(WalletService.class);
+    }
+
+    public static CategoryService getCategoryService(Context context) {
+        return getClient(context).create(CategoryService.class);
+    }
+
+    public static ReportService getReportService(Context context) {
+        return getClient(context).create(ReportService.class);
+    }
+
+    public static ChatbotService getChatbotService(Context context) {
+        return getClient(context).create(ChatbotService.class);
     }
 }

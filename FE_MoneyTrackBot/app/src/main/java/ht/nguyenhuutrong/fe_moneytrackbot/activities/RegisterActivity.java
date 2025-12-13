@@ -9,8 +9,8 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import ht.nguyenhuutrong.fe_moneytrackbot.R;
-import ht.nguyenhuutrong.fe_moneytrackbot.api.ApiService;
 import ht.nguyenhuutrong.fe_moneytrackbot.api.RetrofitClient;
+import ht.nguyenhuutrong.fe_moneytrackbot.api.services.AuthService; // 🔥 IMPORT MỚI
 import ht.nguyenhuutrong.fe_moneytrackbot.models.RegisterRequest;
 import ht.nguyenhuutrong.fe_moneytrackbot.models.User;
 import retrofit2.Call;
@@ -19,10 +19,11 @@ import retrofit2.Response;
 
 public class RegisterActivity extends AppCompatActivity {
 
-    // 2. THÊM EMAIL
     private EditText editTextUsername, editTextEmail, editTextPassword;
     private Button buttonRegister;
-    private ApiService apiService;
+
+    // 🔥 CẬP NHẬT: Dùng AuthService thay vì ApiService
+    private AuthService authService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,41 +31,35 @@ public class RegisterActivity extends AppCompatActivity {
         setContentView(R.layout.activity_register);
 
         editTextUsername = findViewById(R.id.editTextUsernameRegister);
-        // 3. THÊM EMAIL (Nhớ đảm bảo ID này khớp với file XML của bạn)
         editTextEmail = findViewById(R.id.editTextEmailRegister);
         editTextPassword = findViewById(R.id.editTextPasswordRegister);
         buttonRegister = findViewById(R.id.buttonRegister);
 
-        // SỬA LẠI: Dùng getApiService(this) để nhất quán
-        // và để Retrofit có Context (dù API này không cần token)
-        apiService = RetrofitClient.getApiService(this);
+        // 🔥 CẬP NHẬT: Gọi qua getAuthService()
+        authService = RetrofitClient.getAuthService(this);
 
         buttonRegister.setOnClickListener(v -> registerUser());
     }
 
     private void registerUser() {
         String username = editTextUsername.getText().toString().trim();
-        // 4. THÊM EMAIL
         String email = editTextEmail.getText().toString().trim();
         String password = editTextPassword.getText().toString().trim();
 
-        // 5. THÊM EMAIL (vào validation)
         if (username.isEmpty() || email.isEmpty() || password.isEmpty()) {
             Toast.makeText(this, "Vui lòng nhập đủ thông tin", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // (Nên check thêm định dạng email)
         if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
             Toast.makeText(this, "Email không hợp lệ", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // 6. THÊM EMAIL (vào request)
         RegisterRequest registerRequest = new RegisterRequest(username, email, password);
 
-        // API của bạn trả về User object, không phải Void
-        Call<User> call = apiService.registerUser(registerRequest);
+        // 🔥 CẬP NHẬT: Gọi hàm từ authService
+        Call<User> call = authService.registerUser(registerRequest);
 
         call.enqueue(new Callback<User>() {
             @Override
@@ -73,8 +68,7 @@ public class RegisterActivity extends AppCompatActivity {
                     Toast.makeText(RegisterActivity.this, "Đăng ký thành công! Vui lòng đăng nhập.", Toast.LENGTH_LONG).show();
                     finish(); // Quay lại LoginActivity
                 } else if (response.code() == 400) {
-                    // Lỗi 400 giờ có thể do nhiều thứ (username, email, password)
-                    Toast.makeText(RegisterActivity.this, "Tên đăng nhập hoặc Email đã tồn tại/không hợp lệ.", Toast.LENGTH_LONG).show();
+                    Toast.makeText(RegisterActivity.this, "Tên đăng nhập hoặc Email đã tồn tại.", Toast.LENGTH_LONG).show();
                 } else {
                     Toast.makeText(RegisterActivity.this, "Đăng ký thất bại (" + response.code() + ")", Toast.LENGTH_SHORT).show();
                 }

@@ -21,18 +21,23 @@ public class TransactionRepository {
     }
 
     public void getTransactions(ApiCallback<List<Transaction>> callback) {
-        RetrofitClient.getApiService(context).getTransactions(null).enqueue(new Callback<List<Transaction>>() {
+        // 🔥 CẬP NHẬT: Gọi qua getTransactionService()
+        RetrofitClient.getTransactionService(context).getTransactions(null).enqueue(new Callback<List<Transaction>>() {
             @Override
             public void onResponse(Call<List<Transaction>> call, Response<List<Transaction>> response) {
-                if (response.isSuccessful() && response.body() != null) callback.onSuccess(response.body());
-                else callback.onError("Lỗi tải giao dịch");
+                if (response.isSuccessful() && response.body() != null) {
+                    callback.onSuccess(response.body());
+                } else {
+                    callback.onError("Lỗi tải giao dịch: " + response.message());
+                }
             }
             @Override public void onFailure(Call<List<Transaction>> call, Throwable t) { callback.onError(t.getMessage()); }
         });
     }
 
     public void createTransaction(Transaction t, ApiCallback<Transaction> callback) {
-        RetrofitClient.getApiService(context).createTransaction(t).enqueue(new Callback<Transaction>() {
+        // 🔥 CẬP NHẬT: Gọi qua getTransactionService()
+        RetrofitClient.getTransactionService(context).createTransaction(t).enqueue(new Callback<Transaction>() {
             @Override
             public void onResponse(Call<Transaction> call, Response<Transaction> response) {
                 if (response.isSuccessful()) callback.onSuccess(response.body());
@@ -43,7 +48,8 @@ public class TransactionRepository {
     }
 
     public void updateTransaction(int id, Transaction t, ApiCallback<Transaction> callback) {
-        RetrofitClient.getApiService(context).updateTransaction(id, t).enqueue(new Callback<Transaction>() {
+        // 🔥 CẬP NHẬT: Gọi qua getTransactionService()
+        RetrofitClient.getTransactionService(context).updateTransaction(id, t).enqueue(new Callback<Transaction>() {
             @Override
             public void onResponse(Call<Transaction> call, Response<Transaction> response) {
                 if (response.isSuccessful()) callback.onSuccess(response.body());
@@ -54,7 +60,8 @@ public class TransactionRepository {
     }
 
     public void deleteTransaction(int id, ApiCallback<Void> callback) {
-        RetrofitClient.getApiService(context).deleteTransaction(id).enqueue(new Callback<Void>() {
+        // 🔥 CẬP NHẬT: Gọi qua getTransactionService()
+        RetrofitClient.getTransactionService(context).deleteTransaction(id).enqueue(new Callback<Void>() {
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {
                 if (response.isSuccessful()) callback.onSuccess(null);

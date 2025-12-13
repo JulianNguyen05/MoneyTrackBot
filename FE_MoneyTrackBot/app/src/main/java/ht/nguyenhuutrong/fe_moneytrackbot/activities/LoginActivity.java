@@ -8,85 +8,74 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModelProvider;
 
 import ht.nguyenhuutrong.fe_moneytrackbot.R;
-import ht.nguyenhuutrong.fe_moneytrackbot.api.ApiService;
-import ht.nguyenhuutrong.fe_moneytrackbot.api.RetrofitClient;
-import ht.nguyenhuutrong.fe_moneytrackbot.api.TokenManager;
-import ht.nguyenhuutrong.fe_moneytrackbot.models.LoginRequest;
-import ht.nguyenhuutrong.fe_moneytrackbot.models.LoginResponse;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
+import ht.nguyenhuutrong.fe_moneytrackbot.viewmodels.LoginViewModel;
 
 public class LoginActivity extends AppCompatActivity {
 
     private EditText editTextUsername, editTextPassword;
     private Button buttonLogin;
     private TextView textViewRegister;
-    private ApiService apiService;
-    private TokenManager tokenManager;
+    private LoginViewModel loginViewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        // Ánh xạ view
-        editTextUsername = findViewById(R.id.editTextUsername);
-        editTextPassword = findViewById(R.id.editTextPassword);
-        buttonLogin = findViewById(R.id.buttonLogin);
-        textViewRegister = findViewById(R.id.textViewRegister);
+        // 1. Init ViewModel
+        loginViewModel = new ViewModelProvider(this).get(LoginViewModel.class);
 
-        // Khởi tạo API & Token
-        apiService = RetrofitClient.getClient(this).create(ApiService.class);
-        tokenManager = TokenManager.getInstance(this);
-
-        // Nếu đã có token thì vào thẳng MainActivity
-        if (tokenManager.getToken() != null) {
+        // 2. Check đăng nhập (Nếu đã có token thì đi tiếp luôn)
+        if (loginViewModel.isUserLoggedIn()) {
             startMainActivity();
             return;
         }
 
-        // Sự kiện nút đăng nhập
-        buttonLogin.setOnClickListener(v -> loginUser());
+        initViews();
+        setupObservers();
 
-        // Sự kiện chuyển sang màn hình đăng ký
+        // 3. Xử lý sự kiện Click
+        buttonLogin.setOnClickListener(v -> {
+            String user = editTextUsername.getText().toString().trim();
+            String pass = editTextPassword.getText().toString().trim();
+            loginViewModel.login(user, pass);
+        });
+
         textViewRegister.setOnClickListener(v ->
                 startActivity(new Intent(LoginActivity.this, RegisterActivity.class))
         );
     }
 
-    private void loginUser() {
-        String username = editTextUsername.getText().toString().trim();
-        String password = editTextPassword.getText().toString().trim();
+    private void initViews() {
+        editTextUsername = findViewById(R.id.editTextUsername);
+        editTextPassword = findViewById(R.id.editTextPassword);
+        buttonLogin = findViewById(R.id.buttonLogin);
+        textViewRegister = findViewById(R.id.textViewRegister);
+    }
 
-        if (username.isEmpty() || password.isEmpty()) {
-            Toast.makeText(this, "Vui lòng nhập đầy đủ thông tin", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        LoginRequest loginRequest = new LoginRequest(username, password);
-
-        Call<LoginResponse> call = apiService.loginUser(loginRequest);
-        call.enqueue(new Callback<LoginResponse>() {
-            @Override
-            public void onResponse(Call<LoginResponse> call, Response<LoginResponse> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    String token = response.body().getAccess();
-                    tokenManager.saveToken(token);
-
-                    Toast.makeText(LoginActivity.this, "Đăng nhập thành công!", Toast.LENGTH_SHORT).show();
-                    startMainActivity();
-                } else {
-                    Toast.makeText(LoginActivity.this, "Sai tên đăng nhập hoặc mật khẩu", Toast.LENGTH_SHORT).show();
-                }
+    private void setupObservers() {
+        // Lắng nghe: Đăng nhập thành công -> Chuyển màn hình
+        loginViewModel.getLoginSuccess().observe(this, success -> {
+            if (success) {
+                Toast.makeText(this, "Đăng nhập thành công!", Toast.LENGTH_SHORT).show();
+                startMainActivity();
             }
+        });
 
-            @Override
-            public void onFailure(Call<LoginResponse> call, Throwable t) {
-                Toast.makeText(LoginActivity.this, "Lỗi mạng: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+        // Lắng nghe: Có lỗi -> Hiện Toast
+        loginViewModel.getErrorMessage().observe(this, message -> {
+            if (message != null) {
+                Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
             }
+        });
+
+        // (Optional) Lắng nghe loading để disable nút login tránh spam click
+        loginViewModel.getIsLoading().observe(this, isLoading -> {
+            buttonLogin.setEnabled(!isLoading);
+            buttonLogin.setText(isLoading ? "Đang xử lý..." : "Đăng nhập");
         });
     }
 
