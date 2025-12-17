@@ -12,7 +12,7 @@
         android:orientation="vertical"
         android:paddingHorizontal="24dp"
         android:paddingTop="24dp"
-        android:paddingBottom="10dp">
+        android:paddingBottom="24dp">
 
         <TextView
             android:layout_width="match_parent"
@@ -20,11 +20,12 @@
             android:layout_marginBottom="20dp"
             android:fontFamily="@font/poppins_bold"
             android:gravity="center"
-            android:text="Giao dịch mới"
+            android:text="Giao dịch"
             android:textColor="@color/black"
             android:textSize="20sp" />
 
         <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/til_amount"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -34,9 +35,8 @@
             app:boxCornerRadiusBottomStart="12dp"
             app:boxCornerRadiusTopEnd="12dp"
             app:boxCornerRadiusTopStart="12dp"
-            app:boxStrokeColor="#2E5D76"
-            app:startIconDrawable="@drawable/ic_triangle_down"
-            app:startIconTint="#E53935">
+            app:boxStrokeWidth="2dp"
+            app:startIconDrawable="@drawable/ic_triangle_down">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/et_amount"
@@ -44,7 +44,6 @@
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/poppins_medium"
                 android:inputType="numberDecimal"
-                android:textColor="#E53935"
                 android:textSize="18sp"
                 android:textStyle="bold" />
         </com.google.android.material.textfield.TextInputLayout>
@@ -52,42 +51,45 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Loại giao dịch"
+            android:layout_marginBottom="5dp"
             android:fontFamily="@font/poppins_medium"
-            android:textSize="14sp"
+            android:text="Loại giao dịch"
             android:textColor="@color/black"
-            android:layout_marginBottom="5dp"/>
+            android:textSize="14sp" />
 
         <RadioGroup
             android:id="@+id/rg_type"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginBottom="12dp">
+            android:layout_marginBottom="12dp"
+            android:orientation="horizontal">
 
             <RadioButton
                 android:id="@+id/rb_expense"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Chi tiêu"
-                android:textColor="#E53935"
                 android:checked="true"
-                android:fontFamily="@font/poppins_regular"/>
+                android:fontFamily="@font/poppins_medium"
+                android:textSize="15sp"
+                android:text="Chi tiêu"
+                android:textColor="@color/obese" />
 
             <RadioButton
                 android:id="@+id/rb_income"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:fontFamily="@font/poppins_medium"
+                android:textSize="15sp"
                 android:text="Thu nhập"
-                android:textColor="#4CAF50"
-                android:fontFamily="@font/poppins_regular"/>
+                android:textColor="@color/normal_weight" />
         </RadioGroup>
 
         <com.google.android.material.textfield.TextInputLayout
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
             android:layout_width="match_parent"
+            android:id="@+id/til_category"
             android:layout_height="wrap_content"
             android:layout_marginBottom="12dp"
             android:hint="Danh mục"
@@ -95,7 +97,11 @@
             app:boxCornerRadiusBottomStart="12dp"
             app:boxCornerRadiusTopEnd="12dp"
             app:boxCornerRadiusTopStart="12dp"
-            app:startIconDrawable="@drawable/ic_wallet">
+            app:boxStrokeColor="@color/selector_box_stroke"
+            app:boxStrokeWidth="2dp"
+            app:hintTextColor="@color/comic_blue_dark"
+            app:startIconDrawable="@drawable/ic_wallet"
+            app:startIconTint="@color/black">
 
             <AutoCompleteTextView
                 android:id="@+id/auto_complete_category"
@@ -103,7 +109,38 @@
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/poppins_regular"
                 android:inputType="none"
+                android:popupBackground="@drawable/bg_card_rounded"
                 android:text="Ăn uống"
+                android:textColor="@color/black"
+                android:textSize="15sp" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp"
+            android:hint="Chọn Ví"
+            app:boxCornerRadiusBottomEnd="12dp"
+            android:id="@+id/til_wallet"
+            app:boxCornerRadiusBottomStart="12dp"
+            app:boxCornerRadiusTopEnd="12dp"
+            app:boxCornerRadiusTopStart="12dp"
+            app:boxStrokeColor="@color/selector_box_stroke"
+            app:boxStrokeWidth="2dp"
+            app:hintTextColor="@color/comic_blue_dark"
+            app:startIconDrawable="@drawable/ic_calender"
+            app:startIconTint="@color/black">
+
+            <AutoCompleteTextView
+                android:id="@+id/auto_complete_wallet"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/poppins_regular"
+                android:popupBackground="@drawable/bg_card_rounded"
+                android:inputType="none"
+                android:text="Ví chính"
+                android:textColor="@color/black"
                 android:textSize="15sp" />
         </com.google.android.material.textfield.TextInputLayout>
 
@@ -117,7 +154,11 @@
             app:boxCornerRadiusBottomStart="12dp"
             app:boxCornerRadiusTopEnd="12dp"
             app:boxCornerRadiusTopStart="12dp"
-            app:startIconDrawable="@drawable/ic_edit">
+            app:boxStrokeColor="@color/comic_blue_dark"
+            app:boxStrokeWidth="2dp"
+            app:hintTextColor="@color/comic_blue_dark"
+            app:startIconDrawable="@drawable/ic_edit"
+            app:startIconTint="@color/black">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/et_note"
@@ -125,30 +166,38 @@
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/poppins_regular"
                 android:inputType="textCapSentences"
+                android:textColor="@color/black"
                 android:textSize="15sp" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <com.google.android.material.textfield.TextInputLayout
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="10dp"
-            android:hint="Chọn Ví"
-            app:boxCornerRadiusBottomEnd="12dp"
-            app:boxCornerRadiusBottomStart="12dp"
-            app:boxCornerRadiusTopEnd="12dp"
-            app:boxCornerRadiusTopStart="12dp"
-            app:startIconDrawable="@drawable/ic_calender">
+            android:orientation="horizontal"
+            android:weightSum="2">
 
-            <AutoCompleteTextView
-                android:id="@+id/auto_complete_wallet"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:fontFamily="@font/poppins_regular"
-                android:inputType="none"
-                android:text="Ví chính"
-                android:textSize="15sp" />
-        </com.google.android.material.textfield.TextInputLayout>
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_cancel"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="50dp"
+                android:layout_marginEnd="8dp"
+                android:layout_weight="1"
+                android:text="Hủy"
+                android:textColor="@color/obese"
+                app:strokeColor="@color/obese"
+                app:strokeWidth="1dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_save"
+                android:layout_width="0dp"
+                android:layout_height="50dp"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:backgroundTint="@color/normal_weight"
+                android:text="Lưu"
+                android:textColor="@color/white" />
+        </LinearLayout>
 
     </LinearLayout>
 </ScrollView>

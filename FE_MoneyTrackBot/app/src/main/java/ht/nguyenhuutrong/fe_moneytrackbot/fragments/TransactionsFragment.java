@@ -216,7 +216,11 @@ public class TransactionsFragment extends Fragment {
     // --- DIALOG THÊM/SỬA GIAO DỊCH (Giữ nguyên logic cũ) ---
     private void showTransactionDialog(Transaction existingTransaction) {
         if (getContext() == null) return;
-        TransactionDialog.show(getContext(), existingTransaction, cachedWallets, cachedCategories,
+
+        // Lấy ví đang được chọn từ ViewModel (có thể null nếu đang chọn Tất cả)
+        Wallet currentWallet = viewModel.selectedWallet.getValue();
+
+        TransactionDialog.show(getContext(), existingTransaction, cachedWallets, cachedCategories, currentWallet,
                 new TransactionDialog.DialogListener() {
                     @Override public void onSave(Transaction t, Integer id) {
                         if (id == null) viewModel.createTransaction(t);
