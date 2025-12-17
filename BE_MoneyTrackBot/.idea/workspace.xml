@@ -5,8 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="2d3c3080-0e50-4bf8-9897-15689bd616fa" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/api/views/cashflow_view.py" beforeDir="false" afterPath="$PROJECT_DIR$/api/views/cashflow_view.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/java/ht/nguyenhuutrong/fe_moneytrackbot/repository/TransactionRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/java/ht/nguyenhuutrong/fe_moneytrackbot/repository/TransactionRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/res/layout/fragment_home.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/res/layout/fragment_home.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
