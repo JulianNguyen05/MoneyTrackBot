@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -157,19 +158,44 @@ public class TransactionsFragment extends Fragment {
             return;
         }
 
+        // Chuẩn bị dữ liệu tên ví
         String[] names = new String[cachedWallets.size() + 1];
         names[0] = "Tất cả ví";
         for (int i = 0; i < cachedWallets.size(); i++) {
             names[i + 1] = cachedWallets.get(i).getName();
         }
 
-        new AlertDialog.Builder(getContext())
-                .setTitle("Chọn ví xem giao dịch")
-                .setItems(names, (dialog, which) -> {
-                    if (which == 0) viewModel.setWallet(null);
-                    else viewModel.setWallet(cachedWallets.get(which - 1));
-                })
-                .show();
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+
+        // --- 1. TÙY CHỈNH TIÊU ĐỀ (Màu đen, Font đậm, Căn giữa) ---
+        TextView titleView = new TextView(getContext());
+        titleView.setText("Chọn ví xem giao dịch");
+        titleView.setPadding(0, 50, 0, 20); // Padding: Trái, Trên, Phải, Dưới
+        titleView.setTextSize(20);
+        titleView.setTextColor(android.graphics.Color.BLACK); // 🔥 Màu chữ tiêu đề
+        titleView.setGravity(android.view.Gravity.CENTER);
+        // titleView.setTypeface(ResourcesCompat.getFont(getContext(), R.font.poppins_bold)); // Nếu muốn set font
+
+        builder.setCustomTitle(titleView);
+
+        // --- 2. TÙY CHỈNH DANH SÁCH (Dùng lại item_dropdown để có chữ đen) ---
+        // R.layout.item_dropdown là file bạn đã tạo cho Spinner (có textColor=black)
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(), R.layout.item_dropdown, names);
+
+        builder.setAdapter(adapter, (dialog, which) -> {
+            if (which == 0) viewModel.setWallet(null);
+            else viewModel.setWallet(cachedWallets.get(which - 1));
+        });
+
+        // --- 3. TẠO DIALOG & SET BACKGROUND ---
+        AlertDialog dialog = builder.create();
+
+        if (dialog.getWindow() != null) {
+            // Set nền bo góc trắng (file bạn đã tạo)
+            dialog.getWindow().setBackgroundDrawableResource(R.drawable.bg_dialog_rounded);
+        }
+
+        dialog.show();
     }
 
     // --- DIALOG CHỌN NGÀY ---

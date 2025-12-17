@@ -76,7 +76,7 @@ public class HomeViewModel extends AndroidViewModel {
         });
     }
 
-    // 3. Các thao tác Thêm/Sửa/Xóa Ví (🔥 ĐÃ SỬA: Dùng Callback mới để bắt lỗi)
+    // 3. Các thao tác Thêm/Sửa/Xóa Ví
 
     public void createWallet(String name, double balance) {
         walletRepo.createWallet(name, balance, new WalletRepository.WalletActionCallback() {
@@ -120,9 +120,11 @@ public class HomeViewModel extends AndroidViewModel {
         });
     }
 
-    // 4. Thêm Danh mục
+    // 4. Các thao tác Thêm/Sửa/Xóa Danh mục (🔥 ĐÃ CẬP NHẬT ĐẦY ĐỦ)
+
     public void createCategory(String name, String type) {
-        categoryRepo.createCategory(name, type, new CategoryRepository.CreateCallback() {
+        // Sử dụng CategoryActionCallback chung
+        categoryRepo.createCategory(name, type, new CategoryRepository.CategoryActionCallback() {
             @Override
             public void onSuccess() {
                 loadCategories();
@@ -135,6 +137,37 @@ public class HomeViewModel extends AndroidViewModel {
         });
     }
 
+    // 🔥 Hàm Mới: Cập nhật danh mục
+    public void updateCategory(Category category) {
+        categoryRepo.updateCategory(category, new CategoryRepository.CategoryActionCallback() {
+            @Override
+            public void onSuccess() {
+                loadCategories();
+            }
+
+            @Override
+            public void onError(String message) {
+                errorMessage.setValue(message);
+            }
+        });
+    }
+
+    // 🔥 Hàm Mới: Xóa danh mục
+    public void deleteCategory(int id) {
+        categoryRepo.deleteCategory(id, new CategoryRepository.CategoryActionCallback() {
+            @Override
+            public void onSuccess() {
+                loadCategories();
+            }
+
+            @Override
+            public void onError(String message) {
+                errorMessage.setValue(message);
+            }
+        });
+    }
+
+    // 5. Báo cáo dòng tiền
     public void loadCashFlow(String startDate, String endDate) {
         repository.getCashFlowReport(startDate, endDate, new TransactionRepository.CashFlowCallback() {
             @Override

@@ -9,7 +9,7 @@ import android.widget.TextView;
 import java.util.List;
 
 import ht.nguyenhuutrong.fe_moneytrackbot.R;
-import ht.nguyenhuutrong.fe_moneytrackbot.dialogs.AddCategoryDialog;
+import ht.nguyenhuutrong.fe_moneytrackbot.dialogs.CategoryDialog;
 import ht.nguyenhuutrong.fe_moneytrackbot.models.Category;
 
 public class CategoryRenderer {
@@ -21,9 +21,8 @@ public class CategoryRenderer {
     private final TextView btnExpense;
     private final TextView btnIncome;
 
-    public interface CategoryActionListener {
-        void onCreate(String name, String type);
-    }
+    // Lưu listener để dùng cho cả Thêm và Sửa/Xóa
+    private CategoryDialog.OnCategoryActionListener actionListener;
 
     public CategoryRenderer(Context context, LinearLayout container, TextView btnExpense, TextView btnIncome) {
         this.context = context;
@@ -41,30 +40,43 @@ public class CategoryRenderer {
         btnIncome.setTextColor(!isExpense ? Color.WHITE : Color.BLACK);
     }
 
-    public void render(List<Category> allCategories, String currentType, CategoryActionListener listener) {
+    // 🔥 CẬP NHẬT: Nhận vào Listener của Dialog để xử lý đủ 3 thao tác
+    public void render(List<Category> allCategories, String currentType, CategoryDialog.OnCategoryActionListener listener) {
         if (context == null) return;
+        this.actionListener = listener; // Lưu lại để dùng ở các hàm con
         container.removeAllViews();
 
         for (Category category : allCategories) {
+            // Lọc danh mục theo loại (chi tiêu/thu nhập)
             if (category.getType() != null && category.getType().equals(currentType)) {
                 addCategoryView(category);
             }
         }
-        addAddButton(currentType, listener);
+        addAddButton(currentType);
     }
 
     private void addCategoryView(Category category) {
         View itemView = LayoutInflater.from(context).inflate(R.layout.item_category, container, false);
         ((TextView) itemView.findViewById(R.id.tv_category_name)).setText(category.getName());
+
+        // 🔥 MỚI: Click vào item thì mở Dialog Sửa/Xóa
+        itemView.setOnClickListener(v ->
+                CategoryDialog.showUpdateDelete(context, category, actionListener)
+        );
+
         container.addView(itemView);
     }
 
-    private void addAddButton(String currentType, CategoryActionListener listener) {
+    private void addAddButton(String currentType) {
         View itemAdd = LayoutInflater.from(context).inflate(R.layout.item_add_category, container, false);
+
+        // Lưu ý: Đảm bảo ID này đúng với file item_add_category.xml của bạn
         View btnAdd = itemAdd.findViewById(R.id.card_add_wallet);
+
         if (btnAdd != null) {
+            // 🔥 MỚI: Click nút cộng thì mở Dialog Thêm
             btnAdd.setOnClickListener(v ->
-                    AddCategoryDialog.show(context, currentType, listener::onCreate)
+                    CategoryDialog.showAdd(context, currentType, actionListener)
             );
         }
         container.addView(itemAdd);

@@ -11,9 +11,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ht.nguyenhuutrong.fe_moneytrackbot.R;
+import ht.nguyenhuutrong.fe_moneytrackbot.dialogs.CategoryDialog; // 🔥 QUAN TRỌNG: Import interface mới
+import ht.nguyenhuutrong.fe_moneytrackbot.dialogs.DateRangeDialog;
 import ht.nguyenhuutrong.fe_moneytrackbot.models.Category;
 import ht.nguyenhuutrong.fe_moneytrackbot.models.Wallet;
-import ht.nguyenhuutrong.fe_moneytrackbot.dialogs.DateRangeDialog;
 
 public class HomeUIManager {
 
@@ -27,7 +28,10 @@ public class HomeUIManager {
 
     private String currentType = "expense";
     private List<Category> cachedCategories = new ArrayList<>();
-    private CategoryRenderer.CategoryActionListener categoryListener;
+
+    // 🔥 CẬP NHẬT: Đổi kiểu Listener sang CategoryDialog.OnCategoryActionListener
+    // Để hỗ trợ đầy đủ 3 sự kiện: onCreate, onUpdate, onDelete
+    private CategoryDialog.OnCategoryActionListener categoryListener;
 
     public HomeUIManager(Context context, View rootView, FragmentManager fragmentManager) {
         this.context = context;
@@ -54,7 +58,8 @@ public class HomeUIManager {
         walletRenderer.render(wallets, listener);
     }
 
-    public void updateCategories(List<Category> categories, CategoryRenderer.CategoryActionListener listener) {
+    // 🔥 CẬP NHẬT: Thay đổi tham số truyền vào
+    public void updateCategories(List<Category> categories, CategoryDialog.OnCategoryActionListener listener) {
         this.cachedCategories = categories;
         this.categoryListener = listener;
         renderCategoryList();
@@ -72,6 +77,7 @@ public class HomeUIManager {
     private void renderCategoryList() {
         categoryRenderer.updateFilterUI(currentType);
         if (categoryListener != null) {
+            // Lúc này hàm render đã nhận đúng kiểu Listener mới
             categoryRenderer.render(cachedCategories, currentType, categoryListener);
         }
     }

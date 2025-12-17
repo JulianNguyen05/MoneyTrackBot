@@ -17,21 +17,20 @@ public class CategoryRepository {
         this.context = context;
     }
 
-    // Callback cho việc lấy danh sách
+    // 1. Callback cho việc lấy danh sách (GET) - Trả về List<Category>
     public interface CategoryCallback {
         void onSuccess(List<Category> categories);
         void onError(String message);
     }
 
-    // Callback cho việc tạo mới (Thêm onError để biết nếu lỗi)
-    public interface CreateCallback {
+    // 2. 🔥 Callback chung cho Thêm / Sửa / Xóa - Chỉ cần báo thành công/thất bại
+    public interface CategoryActionCallback {
         void onSuccess();
         void onError(String message);
     }
 
-    // 1. Lấy danh sách danh mục
+    // ================== A. LẤY DANH SÁCH ==================
     public void getCategories(CategoryCallback callback) {
-        // 🔥 CẬP NHẬT: Gọi qua getCategoryService()
         RetrofitClient.getCategoryService(context).getCategories().enqueue(new Callback<List<Category>>() {
             @Override
             public void onResponse(Call<List<Category>> call, Response<List<Category>> response) {
@@ -43,16 +42,15 @@ public class CategoryRepository {
             }
             @Override
             public void onFailure(Call<List<Category>> call, Throwable t) {
-                callback.onError(t.getMessage());
+                callback.onError("Lỗi kết nối: " + t.getMessage());
             }
         });
     }
 
-    // 2. Tạo danh mục mới
-    public void createCategory(String name, String type, CreateCallback callback) {
+    // ================== B. TẠO MỚI (CREATE) ==================
+    public void createCategory(String name, String type, CategoryActionCallback callback) {
         Category category = new Category(name, type);
 
-        // 🔥 CẬP NHẬT: Gọi qua getCategoryService()
         RetrofitClient.getCategoryService(context).createCategory(category).enqueue(new Callback<Category>() {
             @Override
             public void onResponse(Call<Category> call, Response<Category> response) {
@@ -64,8 +62,52 @@ public class CategoryRepository {
             }
             @Override
             public void onFailure(Call<Category> call, Throwable t) {
-                callback.onError(t.getMessage());
+                callback.onError("Lỗi kết nối: " + t.getMessage());
             }
         });
+    }
+
+    // ================== C. CẬP NHẬT (UPDATE) - MỚI ==================
+    public void updateCategory(Category category, CategoryActionCallback callback) {
+        // Gọi API update với ID lấy từ đối tượng category
+        RetrofitClient.getCategoryService(context)
+                .updateCategory(category.getId(), category)
+                .enqueue(new Callback<Category>() {
+                    @Override
+                    public void onResponse(Call<Category> call, Response<Category> response) {
+                        if (response.isSuccessful()) {
+                            callback.onSuccess();
+                        } else {
+                            callback.onError("Lỗi cập nhật: " + response.message());
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<Category> call, Throwable t) {
+                        callback.onError("Lỗi kết nối: " + t.getMessage());
+                    }
+                });
+    }
+
+    // ================== D. XÓA (DELETE) - MỚI ==================
+    public void deleteCategory(int id, CategoryActionCallback callback) {
+        // Gọi API delete với ID truyền vào
+        RetrofitClient.getCategoryService(context)
+                .deleteCategory(id)
+                .enqueue(new Callback<Void>() {
+                    @Override
+                    public void onResponse(Call<Void> call, Response<Void> response) {
+                        if (response.isSuccessful()) {
+                            callback.onSuccess();
+                        } else {
+                            callback.onError("Lỗi xóa danh mục: " + response.message());
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<Void> call, Throwable t) {
+                        callback.onError("Lỗi kết nối: " + t.getMessage());
+                    }
+                });
     }
 }
