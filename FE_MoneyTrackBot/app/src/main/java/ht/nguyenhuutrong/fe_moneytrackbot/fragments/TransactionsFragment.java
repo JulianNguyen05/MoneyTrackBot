@@ -174,7 +174,7 @@ public class TransactionsFragment extends Fragment {
 
     // --- DIALOG CHỌN NGÀY ---
 // --- DIALOG CHỌN NGÀY (Giao diện giống HomeFragment) ---
-    private void showDateRangePicker() {
+        private void showDateRangePicker() {
         // 1. Tạo Builder & Set Theme
         MaterialDatePicker.Builder<Pair<Long, Long>> builder =
                 MaterialDatePicker.Builder.dateRangePicker();
