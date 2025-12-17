@@ -173,25 +173,44 @@ public class TransactionsFragment extends Fragment {
     }
 
     // --- DIALOG CHỌN NGÀY ---
+// --- DIALOG CHỌN NGÀY (Giao diện giống HomeFragment) ---
     private void showDateRangePicker() {
-        MaterialDatePicker.Builder<Pair<Long, Long>> builder = MaterialDatePicker.Builder.dateRangePicker();
+        // 1. Tạo Builder & Set Theme
+        MaterialDatePicker.Builder<Pair<Long, Long>> builder =
+                MaterialDatePicker.Builder.dateRangePicker();
+
         builder.setTitleText("Chọn khoảng thời gian");
-        // builder.setTheme(R.style.CustomDatePickerTheme); // Nếu bạn đã tạo theme ở bước trước
+
+        // 🔥 Áp dụng Theme (Nền xám nhạt, chữ đen)
+        builder.setTheme(R.style.CustomDatePickerTheme);
 
         MaterialDatePicker<Pair<Long, Long>> picker = builder.build();
+
+        // 2. Xử lý khi bấm OK
         picker.addOnPositiveButtonClickListener(selection -> {
             if (selection.first != null && selection.second != null) {
                 SimpleDateFormat apiFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
                 SimpleDateFormat displayFormat = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
 
-                Date start = new Date(selection.first);
-                Date end = new Date(selection.second);
+                Date startDate = new Date(selection.first);
+                Date endDate = new Date(selection.second);
 
-                tvSelectedDate.setText(String.format("%s - %s", displayFormat.format(start), displayFormat.format(end)));
-                viewModel.setDateRange(apiFormat.format(start), apiFormat.format(end));
+                String startApi = apiFormat.format(startDate);
+                String endApi = apiFormat.format(endDate);
+
+                String startDisplay = displayFormat.format(startDate);
+                String endDisplay = displayFormat.format(endDate);
+
+                // Cập nhật text hiển thị
+                tvSelectedDate.setText(String.format("%s - %s", startDisplay, endDisplay));
+
+                // 🔥 QUAN TRỌNG: Gọi setDateRange để ViewModel tải lại
+                // cả danh sách Transaction VÀ báo cáo CashFlow
+                viewModel.setDateRange(startApi, endApi);
             }
         });
-        picker.show(getParentFragmentManager(), "TRANSACTION_DATE");
+
+        picker.show(getParentFragmentManager(), "TRANSACTION_DATE_PICKER");
     }
 
     // --- DIALOG THÊM/SỬA GIAO DỊCH (Giữ nguyên logic cũ) ---
