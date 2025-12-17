@@ -2,15 +2,19 @@ package ht.nguyenhuutrong.fe_moneytrackbot.dialogs;
 
 import android.app.AlertDialog;
 import android.content.Context;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
+import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.EditText;
-import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
-// Interface để gửi kết quả về HomeFragment
+import com.google.android.material.textfield.TextInputEditText;
+
+import ht.nguyenhuutrong.fe_moneytrackbot.R;
+
 public class AddCategoryDialog {
 
     public interface OnCategoryCreatedListener {
@@ -18,58 +22,55 @@ public class AddCategoryDialog {
     }
 
     public static void show(Context context, String currentType, OnCategoryCreatedListener listener) {
-        LinearLayout layout = new LinearLayout(context);
-        layout.setOrientation(LinearLayout.VERTICAL);
-        layout.setPadding(60, 40, 60, 10);
+        // 1. Inflate layout từ XML
+        View dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_add_category, null);
 
-        final EditText etName = new EditText(context);
-        etName.setHint("Tên danh mục (vd: Ăn sáng)");
-        layout.addView(etName);
+        // 2. Ánh xạ View
+        TextInputEditText etName = dialogView.findViewById(R.id.et_category_name);
+        RadioGroup rgType = dialogView.findViewById(R.id.rg_category_type);
+        RadioButton rbExpense = dialogView.findViewById(R.id.rb_expense);
+        RadioButton rbIncome = dialogView.findViewById(R.id.rb_income);
+        TextView btnCancel = dialogView.findViewById(R.id.btn_cancel);
+        TextView btnConfirm = dialogView.findViewById(R.id.btn_confirm);
 
-        TextView tvLabel = new TextView(context);
-        tvLabel.setText("Loại danh mục:");
-        tvLabel.setPadding(0, 30, 0, 10);
-        layout.addView(tvLabel);
-
-        final RadioGroup rgType = new RadioGroup(context);
-        rgType.setOrientation(LinearLayout.HORIZONTAL);
-
-        RadioButton rbExpense = new RadioButton(context);
-        rbExpense.setId(View.generateViewId());
-        rbExpense.setText("Chi phí");
-
-        RadioButton rbIncome = new RadioButton(context);
-        rbIncome.setId(View.generateViewId());
-        rbIncome.setText("Thu nhập");
-
-        rgType.addView(rbExpense);
-        rgType.addView(rbIncome);
-        layout.addView(rgType);
-
-        // Auto check
+        // 3. Xử lý Logic hiển thị ban đầu (Auto check)
         if ("income".equals(currentType)) {
             rbIncome.setChecked(true);
         } else {
             rbExpense.setChecked(true);
         }
 
-        new AlertDialog.Builder(context)
-                .setTitle("Thêm Danh Mục Mới")
-                .setView(layout)
-                .setPositiveButton("Thêm", (dialog, which) -> {
-                    String name = etName.getText().toString().trim();
-                    if (name.isEmpty()) {
-                        Toast.makeText(context, "Vui lòng nhập tên!", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-                    String type = rbIncome.isChecked() ? "income" : "expense";
+        // 4. Tạo Dialog
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        builder.setView(dialogView);
+        AlertDialog dialog = builder.create();
 
-                    // Gửi dữ liệu về HomeFragment xử lý
-                    if (listener != null) {
-                        listener.onCategoryCreated(name, type);
-                    }
-                })
-                .setNegativeButton("Hủy", null)
-                .show();
+        // --- Làm trong suốt nền mặc định để hiện bo góc ---
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        }
+
+        // 5. Xử lý sự kiện nút bấm
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+
+        btnConfirm.setOnClickListener(v -> {
+            String name = etName.getText() != null ? etName.getText().toString().trim() : "";
+
+            if (name.isEmpty()) {
+                Toast.makeText(context, "Vui lòng nhập tên danh mục!", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // Xác định loại dựa trên RadioButton đang được chọn
+            String type = rbIncome.isChecked() ? "income" : "expense";
+
+            // Gửi dữ liệu về Fragment
+            if (listener != null) {
+                listener.onCategoryCreated(name, type);
+            }
+            dialog.dismiss();
+        });
+
+        dialog.show();
     }
 }

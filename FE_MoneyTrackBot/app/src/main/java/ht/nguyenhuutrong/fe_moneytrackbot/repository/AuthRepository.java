@@ -53,7 +53,7 @@ public class AuthRepository {
         });
     }
 
-    // --- 2. XỬ LÝ ĐĂNG KÝ (🔥 MỚI THÊM VÀO) ---
+    // --- 2. XỬ LÝ ĐĂNG KÝ---
     public void register(String username, String email, String password, AuthCallback callback) {
         RegisterRequest request = new RegisterRequest(username, email, password);
 

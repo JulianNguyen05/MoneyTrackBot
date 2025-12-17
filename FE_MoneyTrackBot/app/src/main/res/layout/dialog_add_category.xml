@@ -11,9 +11,10 @@
         android:id="@+id/tv_dialog_title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Thêm ví mới"
+        android:text="Thêm danh mục mới"
         android:textColor="@color/black"
         android:textSize="20sp"
+        android:fontFamily="@font/poppins_bold"
         android:textStyle="bold"
         android:layout_marginBottom="20dp"/>
 
@@ -28,10 +29,10 @@
         app:boxCornerRadiusTopEnd="12dp"
         app:boxCornerRadiusBottomStart="12dp"
         app:boxCornerRadiusBottomEnd="12dp"
-        android:hint="Tên ví (Ví dụ: Tiền mặt)">
+        android:hint="Tên danh mục (vd: Ăn sáng)">
 
         <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/et_wallet_name"
+            android:id="@+id/et_category_name"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textColor="@color/black"
@@ -40,29 +41,43 @@
             android:inputType="textCapSentences"/>
     </com.google.android.material.textfield.TextInputLayout>
 
-    <com.google.android.material.textfield.TextInputLayout
-        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+    <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:text="Loại danh mục:"
+        android:textColor="@color/black"
+        android:textSize="14sp"
+        android:fontFamily="@font/poppins_medium"
         android:layout_marginTop="16dp"
-        app:boxStrokeColor="@color/comic_blue_dark"
-        app:boxStrokeWidth="2dp"
-        app:hintTextColor="@color/comic_blue_dark"
-        app:boxCornerRadiusTopStart="12dp"
-        app:boxCornerRadiusTopEnd="12dp"
-        app:boxCornerRadiusBottomStart="12dp"
-        app:boxCornerRadiusBottomEnd="12dp"
-        android:hint="Số dư ban đầu">
+        android:layout_marginBottom="8dp"/>
 
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/et_wallet_balance"
-            android:layout_width="match_parent"
+    <RadioGroup
+        android:id="@+id/rg_category_type"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <RadioButton
+            android:id="@+id/rb_expense"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:text="Chi phí"
+            android:textSize="16sp"
+            android:fontFamily="@font/poppins_medium"
+            android:textColor="@color/black"
+            android:layout_marginEnd="24dp"/>
+
+        <RadioButton
+            android:id="@+id/rb_income"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Thu nhập"
             android:textColor="@color/black"
             android:fontFamily="@font/poppins_medium"
             android:textSize="16sp"
-            android:inputType="numberDecimal"/>
-    </com.google.android.material.textfield.TextInputLayout>
+            android:layout_marginEnd="24dp"/>
+    </RadioGroup>
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -76,12 +91,12 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="HỦY"
-            android:textColor="@color/obese"
+            android:textColor="#F44336"
             android:textStyle="bold"
             android:textSize="16sp"
             android:padding="10dp"
             android:clickable="true"
-            android:focusable="true"/>
+            android:focusable="true" />
 
         <TextView
             android:id="@+id/btn_confirm"
