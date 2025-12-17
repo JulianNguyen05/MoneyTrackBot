@@ -64,3 +64,24 @@ class TransactionViewSet(BaseViewSet):
             wallet.balance += instance.amount
         wallet.save(update_fields=['balance'])
         instance.delete()
+
+    def get_queryset(self):
+        queryset = Transaction.objects.filter(user=self.request.user)
+
+        # 1. Lọc theo Ví (nếu có tham số wallet_id)
+        wallet_id = self.request.query_params.get('wallet_id')
+        if wallet_id:
+            queryset = queryset.filter(wallet_id=wallet_id)
+
+        # 2. Lọc theo khoảng ngày (start_date, end_date)
+        start_date = self.request.query_params.get('start_date')
+        end_date = self.request.query_params.get('end_date')
+        if start_date and end_date:
+            queryset = queryset.filter(date__range=[start_date, end_date])
+
+        # 3. Tìm kiếm từ khóa (search)
+        search_term = self.request.query_params.get('search')
+        if search_term:
+            queryset = queryset.filter(note__icontains=search_term)
+
+        return queryset.order_by('-date')  # Sắp xếp mới nhất trước

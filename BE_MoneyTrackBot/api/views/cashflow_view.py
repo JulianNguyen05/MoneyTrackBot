@@ -67,4 +67,15 @@ class CashFlowReportView(APIView):
             'net_change': net_change
         }
 
+        wallet_id = request.query_params.get('wallet_id')
+
+        transactions = Transaction.objects.filter(
+            user=request.user,
+            date__range=[start_date, end_date]
+        )
+
+        # 🔥 QUAN TRỌNG: Nếu có wallet_id thì lọc thêm
+        if wallet_id:
+            transactions = transactions.filter(wallet_id=wallet_id)
+
         return Response(data, status=status.HTTP_200_OK)

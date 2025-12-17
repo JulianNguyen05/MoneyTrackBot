@@ -28,9 +28,18 @@ public interface TransactionService {
     @DELETE("api/transactions/{id}/")
     Call<Void> deleteTransaction(@Path("id") int transactionId);
 
+    @GET("api/transactions/")
+    Call<List<Transaction>> getTransactions(
+            @Query("search") String searchTerm,
+            @Query("wallet_id") Integer walletId, // Integer để có thể null (lấy tất cả)
+            @Query("start_date") String startDate,
+            @Query("end_date") String endDate
+    );
+
     @GET("api/reports/cashflow/")
     Call<CashFlowResponse> getCashFlow(
-            @Query("start_date") String startDate,  // Định dạng: yyyy-MM-dd
-            @Query("end_date") String endDate       // Định dạng: yyyy-MM-dd
+            @Query("start_date") String startDate,
+            @Query("end_date") String endDate,
+            @Query("wallet_id") Integer walletId // Thêm tham số này
     );
 }
