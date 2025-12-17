@@ -30,29 +30,6 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <ImageButton
-            android:id="@+id/btnSearch"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="15dp"
-            android:background="@null"
-            android:padding="5dp"
-            android:src="@drawable/ic_search"
-            app:layout_constraintBottom_toBottomOf="@+id/tvTitle"
-            app:layout_constraintEnd_toStartOf="@+id/btnCalendar"
-            app:layout_constraintTop_toTopOf="@+id/tvTitle" />
-
-        <ImageButton
-            android:id="@+id/btnCalendar"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="@drawable/bg_calendar_button"
-            android:padding="8dp"
-            android:src="@drawable/ic_calender"
-            app:layout_constraintBottom_toBottomOf="@+id/tvTitle"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/tvTitle" />
-
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <!-- PHẦN 2: Phạm vi tùy chỉnh -->
@@ -240,7 +217,7 @@
         app:layout_constraintStart_toStartOf="parent"
 
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.100000024">
+        app:layout_constraintVertical_bias="0.06999999">
 
         <ImageView
             android:layout_width="match_parent"

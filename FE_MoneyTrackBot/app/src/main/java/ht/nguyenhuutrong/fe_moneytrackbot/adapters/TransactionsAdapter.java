@@ -1,6 +1,9 @@
 package ht.nguyenhuutrong.fe_moneytrackbot.adapters;
 
 import android.content.Context;
+import android.graphics.PorterDuff; // Import mới
+import android.graphics.PorterDuffColorFilter; // Import mới
+import android.graphics.drawable.Drawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,16 +27,12 @@ public class TransactionsAdapter extends RecyclerView.Adapter<TransactionsAdapte
 
     private List<Transaction> list;
     private Context context;
-
-    // 1. Khai báo Listener
     private OnItemClickListener listener;
 
-    // 2. Interface để Fragment implements
     public interface OnItemClickListener {
         void onItemClick(Transaction transaction);
     }
 
-    // 3. Cập nhật Constructor nhận Listener
     public TransactionsAdapter(List<Transaction> list, OnItemClickListener listener) {
         this.list = list;
         this.listener = listener;
@@ -51,13 +50,12 @@ public class TransactionsAdapter extends RecyclerView.Adapter<TransactionsAdapte
     public void onBindViewHolder(@NonNull TransactionViewHolder holder, int position) {
         Transaction t = list.get(position);
 
-        // ... (Giữ nguyên code hiển thị Text, Color, Icon cũ của bạn) ...
-        // START: Code hiển thị cũ
+        // --- 1. Hiển thị Category và Note ---
         String catName = t.getCategoryName();
-        if (catName != null && !catName.isEmpty()) holder.tvCategoryTitle.setText(catName);
-        else holder.tvCategoryTitle.setText("Giao dịch");
+        holder.tvCategoryTitle.setText((catName != null && !catName.isEmpty()) ? catName : "Giao dịch");
         holder.tvNote.setText(t.getNote());
 
+        // --- 2. Hiển thị Ngày ---
         try {
             SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
             Date date = inputFormat.parse(t.getDate());
@@ -65,33 +63,58 @@ public class TransactionsAdapter extends RecyclerView.Adapter<TransactionsAdapte
             if (date != null) holder.tvDate.setText(outputFormat.format(date));
         } catch (Exception e) { holder.tvDate.setText(t.getDate()); }
 
+        // --- 3. XỬ LÝ TIỀN TỆ (Dấu, Màu, Mũi tên) ---
         double amount = t.getAmount();
-        String formattedAmount = NumberFormat.getCurrencyInstance(new Locale("vi", "VN")).format(Math.abs(amount));
-        holder.tvAmount.setText(formattedAmount);
+        String moneyString = NumberFormat.getCurrencyInstance(new Locale("vi", "VN")).format(Math.abs(amount));
+
+        if (amount < 0) {
+            // === CHI TIÊU (MÀU ĐỎ) ===
+            holder.tvAmount.setText("-" + moneyString);
+
+            int colorRed = ContextCompat.getColor(context, R.color.obese);
+            holder.tvAmount.setTextColor(colorRed);
+
+            // Xử lý icon Mũi tên xuống
+            Drawable arrowDown = ContextCompat.getDrawable(context, R.drawable.ic_triangle_down);
+            if (arrowDown != null) {
+                // mutate() tạo bản sao để không ảnh hưởng icon gốc
+                arrowDown = arrowDown.mutate();
+                // 🔥 SỬ DỤNG COLOR FILTER (Mạnh hơn setTint)
+                arrowDown.setColorFilter(new PorterDuffColorFilter(colorRed, PorterDuff.Mode.SRC_IN));
+                holder.tvAmount.setCompoundDrawablesWithIntrinsicBounds(arrowDown, null, null, null);
+            }
+        } else {
+            // === THU NHẬP (MÀU XANH) ===
+            holder.tvAmount.setText("+" + moneyString);
+
+            int colorGreen = ContextCompat.getColor(context, R.color.normal_weight);
+            holder.tvAmount.setTextColor(colorGreen);
+
+            // Xử lý icon Mũi tên lên
+            Drawable arrowUp = ContextCompat.getDrawable(context, R.drawable.ic_triangle_up);
+            if (arrowUp != null) {
+                arrowUp = arrowUp.mutate();
+                // 🔥 SỬ DỤNG COLOR FILTER
+                arrowUp.setColorFilter(new PorterDuffColorFilter(colorGreen, PorterDuff.Mode.SRC_IN));
+                holder.tvAmount.setCompoundDrawablesWithIntrinsicBounds(arrowUp, null, null, null);
+            }
+        }
+
+        // Set text cho dòng tiền nhỏ
         String signedAmount = NumberFormat.getCurrencyInstance(new Locale("vi", "VN")).format(amount);
         holder.tvAmountSmall.setText(signedAmount);
 
-        if (amount < 0) {
-            holder.tvAmount.setTextColor(ContextCompat.getColor(context, R.color.obese));
-            holder.tvAmount.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_triangle_down, 0, 0, 0);
-        } else {
-            holder.tvAmount.setTextColor(ContextCompat.getColor(context, R.color.normal_weight));
-            holder.tvAmount.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_triangle_up, 0, 0, 0);
-        }
-
+        // --- 4. Icon Category logic ---
         String categoryLower = (catName != null) ? catName.toLowerCase() : "";
         if (categoryLower.contains("ăn") || categoryLower.contains("uống") || categoryLower.contains("food")) {
             holder.imgCategory.setImageResource(R.mipmap.ic_food);
         } else {
             holder.imgCategory.setImageResource(R.mipmap.ic_launcher);
         }
-        // END: Code hiển thị cũ
 
-        // 4. Bắt sự kiện Click
+        // --- 5. Click Event ---
         holder.itemView.setOnClickListener(v -> {
-            if (listener != null) {
-                listener.onItemClick(t);
-            }
+            if (listener != null) listener.onItemClick(t);
         });
     }
 

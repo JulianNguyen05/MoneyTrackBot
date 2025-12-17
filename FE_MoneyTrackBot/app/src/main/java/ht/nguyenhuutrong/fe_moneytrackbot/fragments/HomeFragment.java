@@ -138,23 +138,38 @@ public class HomeFragment extends Fragment {
         }
     }
 
+    // 🔥 CẬP NHẬT LOGIC TÍNH TOÁN VÀ HIỂN THỊ NET CHANGE
     private void updateCashFlowUI(CashFlowResponse data) {
         if (data == null) return;
 
-        tvIncomeValue.setText(currencyFormat.format(data.getTotalIncome()));
-        tvExpenseValue.setText(currencyFormat.format(data.getTotalExpense()));
+        // 1. Lấy giá trị tuyệt đối (để đảm bảo tính toán đúng dù DB lưu âm hay dương)
+        double realIncome = Math.abs(data.getTotalIncome());
+        double realExpense = Math.abs(data.getTotalExpense());
 
-        double netChange = data.getNetChange();
-        tvNetChange.setText(currencyFormat.format(netChange));
+        // --- HIỂN THỊ THU NHẬP (Màu Xanh, Dấu +) ---
+        tvIncomeValue.setText("+" + currencyFormat.format(realIncome));
+        tvIncomeValue.setTextColor(ContextCompat.getColor(requireContext(), R.color.normal_weight));
 
-        // Logic màu sắc: Dương -> normal_weight, Âm -> obese
-        int colorRes = netChange >= 0
-                ? R.color.normal_weight
-                : R.color.obese;
+        // --- HIỂN THỊ CHI TIÊU (Màu Đỏ, Dấu -) ---
+        tvExpenseValue.setText("-" + currencyFormat.format(realExpense));
+        tvExpenseValue.setTextColor(ContextCompat.getColor(requireContext(), R.color.obese));
 
-        tvNetChange.setTextColor(
-                ContextCompat.getColor(requireContext(), colorRes)
-        );
+        // --- 2. TỰ TÍNH TOÁN NET CHANGE (THU - CHI) ---
+        // Lấy Thu trừ đi Chi để ra số thực tế
+        double netResult = realIncome - realExpense;
+
+        // Format lấy trị tuyệt đối của kết quả để ghép chuỗi
+        String netString = currencyFormat.format(Math.abs(netResult));
+
+        if (netResult < 0) {
+            // === ÂM (Chi nhiều hơn Thu) -> MÀU ĐỎ, DẤU TRỪ ===
+            tvNetChange.setText("-" + netString);
+            tvNetChange.setTextColor(ContextCompat.getColor(requireContext(), R.color.obese));
+        } else {
+            // === DƯƠNG (Thu nhiều hơn Chi) -> MÀU XANH, DẤU CỘNG ===
+            tvNetChange.setText("+" + netString);
+            tvNetChange.setTextColor(ContextCompat.getColor(requireContext(), R.color.normal_weight));
+        }
     }
 
     private void loadCurrentMonthData() {

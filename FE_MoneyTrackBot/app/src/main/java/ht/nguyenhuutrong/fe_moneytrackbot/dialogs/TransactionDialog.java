@@ -56,12 +56,21 @@ public class TransactionDialog {
         RadioGroup rgType = view.findViewById(R.id.rg_type);
         AutoCompleteTextView autoCat = view.findViewById(R.id.auto_complete_category);
         AutoCompleteTextView autoWallet = view.findViewById(R.id.auto_complete_wallet);
+
         Button btnCancel = view.findViewById(R.id.btn_cancel);
         Button btnSave = view.findViewById(R.id.btn_save);
 
         final int[] selectedIds = {-1, -1}; // [0]=WalletId, [1]=CatId
 
-        // 3. Phân loại danh mục
+        // 3. Tạo Dialog builder
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        builder.setView(view);
+        AlertDialog dialog = builder.create();
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        }
+
+        // 4. Phân loại danh mục
         List<Category> expenseList = new ArrayList<>();
         List<Category> incomeList = new ArrayList<>();
         for (Category c : categories) {
@@ -69,53 +78,55 @@ public class TransactionDialog {
             else expenseList.add(c);
         }
 
-        // 4. Logic đổi Giao diện (Màu sắc & Icon) khi chọn loại giao dịch
+        // 5. Logic UI update
         Runnable updateUiByType = () -> {
             boolean isIncome = rgType.getCheckedRadioButtonId() == R.id.rb_income;
-
-            // Chọn màu và icon tương ứng
             int colorRes = isIncome ? R.color.normal_weight : R.color.obese;
             int iconRes = isIncome ? R.drawable.ic_triangle_up : R.drawable.ic_triangle_down;
             int color = ContextCompat.getColor(context, colorRes);
 
-            // Cập nhật TextInputLayout (Số tiền)
             tilAmount.setStartIconDrawable(iconRes);
             tilAmount.setStartIconTintList(ColorStateList.valueOf(color));
             tilAmount.setBoxStrokeColor(color);
             tilAmount.setHintTextColor(ColorStateList.valueOf(color));
-
-            // Cập nhật EditText bên trong
             etAmount.setTextColor(color);
 
-            // Cập nhật danh sách Category
             List<Category> list = isIncome ? incomeList : expenseList;
-
-            // 🔥 CẬP NHẬT QUAN TRỌNG: Sử dụng R.layout.item_dropdown để chữ màu đen
             autoCat.setAdapter(new ArrayAdapter<>(context, R.layout.item_dropdown, list));
 
-            autoCat.setText(""); // Clear text khi đổi loại
-            selectedIds[1] = -1;
-            if (!list.isEmpty()) {
-                autoCat.setText(list.get(0).getName(), false);
-                selectedIds[1] = list.get(0).getId();
+            // 🔥 SỬA LỖI Ở ĐÂY: Kiểm tra thủ công xem ID đã chọn có trong list mới không
+            boolean isCurrentCategoryInList = false;
+            if (selectedIds[1] != -1) {
+                for (Category c : list) {
+                    if (c.getId() == selectedIds[1]) {
+                        isCurrentCategoryInList = true;
+                        break;
+                    }
+                }
+            }
+
+            // Nếu chưa chọn gì hoặc danh mục cũ không nằm trong loại mới (Thu/Chi) -> Reset về cái đầu tiên
+            if (autoCat.getText().toString().isEmpty() || !isCurrentCategoryInList) {
+                autoCat.setText("");
+                selectedIds[1] = -1;
+                if (!list.isEmpty()) {
+                    autoCat.setText(list.get(0).getName(), false);
+                    selectedIds[1] = list.get(0).getId();
+                }
             }
         };
 
         rgType.setOnCheckedChangeListener((g, id) -> updateUiByType.run());
         autoCat.setOnItemClickListener((p, v, pos, id) -> selectedIds[1] = ((Category) p.getItemAtPosition(pos)).getId());
-
-        // 5. Logic Ví (Wallet)
-        // 🔥 CẬP NHẬT QUAN TRỌNG: Sử dụng R.layout.item_dropdown cho Ví luôn
         autoWallet.setAdapter(new ArrayAdapter<>(context, R.layout.item_dropdown, wallets));
         autoWallet.setOnItemClickListener((p, v, pos, id) -> selectedIds[0] = ((Wallet) p.getItemAtPosition(pos)).getId());
 
-        // 6. Điền dữ liệu (Fill Data)
+        // 6. XỬ LÝ LOGIC FILL DATA
         if (existingTransaction != null) {
-            // --- CHẾ ĐỘ SỬA ---
+            // === CHẾ ĐỘ SỬA ===
             etAmount.setText(String.valueOf((long) Math.abs(existingTransaction.getAmount())));
             etNote.setText(existingTransaction.getNote());
 
-            // Chọn ví cũ
             for (Wallet w : wallets) {
                 if (w.getId() == existingTransaction.getWalletId()) {
                     autoWallet.setText(w.getName(), false);
@@ -123,52 +134,72 @@ public class TransactionDialog {
                     break;
                 }
             }
-            // Chọn danh mục cũ
+            // Tìm Category cũ để hiển thị đúng tab Thu/Chi
             for (Category c : categories) {
                 if (c.getId() == existingTransaction.getCategoryId()) {
+                    // Set tab trước
                     if ("income".equals(c.getType())) rgType.check(R.id.rb_income);
                     else rgType.check(R.id.rb_expense);
 
-                    updateUiByType.run(); // Cập nhật màu sắc trước khi set text
-                    autoCat.setText(c.getName(), false);
+                    // Set ID trước khi chạy updateUi để nó không bị reset
                     selectedIds[1] = c.getId();
+
+                    // Cập nhật list dropdown theo loại
+                    List<Category> list = "income".equals(c.getType()) ? incomeList : expenseList;
+                    autoCat.setAdapter(new ArrayAdapter<>(context, R.layout.item_dropdown, list));
+
+                    // Set Text hiển thị
+                    autoCat.setText(c.getName(), false);
                     break;
                 }
             }
-            btnSave.setText("Cập nhật");
-        } else {
-            // --- CHẾ ĐỘ THÊM MỚI ---
-            updateUiByType.run(); // Chạy lần đầu để set màu mặc định (Expense)
+            updateUiByType.run(); // Cập nhật màu sắc UI
 
-            // Tự động chọn Ví đang hiển thị ở Fragment
+            // --- BIẾN ĐỔI NÚT ---
+            btnSave.setText("Cập nhật");
+            btnCancel.setText("Xóa");
+            btnCancel.setTextColor(Color.RED);
+
+            btnCancel.setOnClickListener(v -> {
+                new AlertDialog.Builder(context)
+                        .setTitle("Xác nhận xóa")
+                        .setMessage("Bạn có chắc chắn muốn xóa giao dịch này không?")
+                        .setPositiveButton("Xóa", (confirmDialog, which) -> {
+                            listener.onDelete(existingTransaction.getId());
+                            dialog.dismiss();
+                        })
+                        .setNegativeButton("Hủy", null)
+                        .show();
+            });
+
+        } else {
+            // === CHẾ ĐỘ THÊM MỚI ===
+            updateUiByType.run();
+
             if (currentWallet != null) {
-                // Nếu đang chọn ví cụ thể
                 autoWallet.setText(currentWallet.getName(), false);
                 selectedIds[0] = currentWallet.getId();
             } else if (!wallets.isEmpty()) {
-                // Nếu đang chọn "Tất cả ví", mặc định lấy ví đầu tiên
                 autoWallet.setText(wallets.get(0).getName(), false);
                 selectedIds[0] = wallets.get(0).getId();
             }
+
+            btnSave.setText("Lưu");
+            btnCancel.setText("Hủy");
+            btnCancel.setOnClickListener(v -> dialog.dismiss());
         }
 
-        // 7. Tạo Dialog và Xử lý Button
-        AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        builder.setView(view);
-        AlertDialog dialog = builder.create();
-
-        // Làm nền trong suốt để thấy bo góc của layout custom
-        if (dialog.getWindow() != null) {
-            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        }
-
-        btnCancel.setOnClickListener(v -> dialog.dismiss());
-
+        // 7. Xử lý logic nút SAVE
         btnSave.setOnClickListener(v -> {
-            Transaction t = buildTransaction(etAmount, etNote, selectedIds[1], selectedIds[0]);
+            boolean isExpense = rgType.getCheckedRadioButtonId() == R.id.rb_expense;
+            Transaction t = buildTransaction(etAmount, etNote, selectedIds[1], selectedIds[0], isExpense);
+
             if (t != null) {
-                if (existingTransaction == null) listener.onSave(t, null);
-                else listener.onSave(t, existingTransaction.getId());
+                if (existingTransaction == null) {
+                    listener.onSave(t, null);
+                } else {
+                    listener.onSave(t, existingTransaction.getId());
+                }
                 dialog.dismiss();
             } else {
                 Toast.makeText(context, "Vui lòng nhập số tiền và chọn đầy đủ thông tin", Toast.LENGTH_SHORT).show();
@@ -178,13 +209,16 @@ public class TransactionDialog {
         dialog.show();
     }
 
-    private static Transaction buildTransaction(EditText etAmt, EditText etNote, int catId, int walletId) {
+    private static Transaction buildTransaction(EditText etAmt, EditText etNote, int catId, int walletId, boolean isExpense) {
         try {
             String amtStr = etAmt.getText().toString().trim();
             if (amtStr.isEmpty()) return null;
 
             double amt = Double.parseDouble(amtStr);
             if (catId == -1 || walletId == -1) return null;
+
+            if (isExpense) amt = -Math.abs(amt);
+            else amt = Math.abs(amt);
 
             String date = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
             return new Transaction(amt, catId, etNote.getText().toString().trim(), date, walletId);

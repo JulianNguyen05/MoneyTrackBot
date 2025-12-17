@@ -15,6 +15,7 @@ import androidx.core.content.ContextCompat;
 import androidx.core.util.Pair;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.LinearLayoutManager; // Import mới
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.card.MaterialCardView;
@@ -29,18 +30,21 @@ import java.util.List;
 import java.util.Locale;
 
 import ht.nguyenhuutrong.fe_moneytrackbot.R;
+import ht.nguyenhuutrong.fe_moneytrackbot.adapters.TransactionsAdapter;
 import ht.nguyenhuutrong.fe_moneytrackbot.dialogs.TransactionDialog;
 import ht.nguyenhuutrong.fe_moneytrackbot.models.CashFlowResponse;
 import ht.nguyenhuutrong.fe_moneytrackbot.models.Category;
 import ht.nguyenhuutrong.fe_moneytrackbot.models.Transaction;
 import ht.nguyenhuutrong.fe_moneytrackbot.models.Wallet;
-import ht.nguyenhuutrong.fe_moneytrackbot.renderers.TransactionRenderer;
 import ht.nguyenhuutrong.fe_moneytrackbot.viewmodels.TransactionViewModel;
 
 public class TransactionsFragment extends Fragment {
 
     private TransactionViewModel viewModel;
-    private TransactionRenderer renderer;
+
+    // 🔥 THAY ĐỔI 1: Xóa Renderer, dùng Adapter và biến RecyclerView
+    private TransactionsAdapter adapter;
+    private RecyclerView rcvTransactions;
 
     // --- VIEW UI ---
     private TextView tvWalletSelector, tvSelectedDate;
@@ -79,12 +83,12 @@ public class TransactionsFragment extends Fragment {
     }
 
     private void initViews(View view) {
-        // RecyclerView
-        RecyclerView rcv = view.findViewById(R.id.rcvTransactions);
-        renderer = new TransactionRenderer(getContext(), rcv, this::showTransactionDialog);
+        // 🔥 THAY ĐỔI 2: Setup RecyclerView trực tiếp (Set LayoutManager)
+        rcvTransactions = view.findViewById(R.id.rcvTransactions);
+        rcvTransactions.setLayoutManager(new LinearLayoutManager(getContext()));
 
         // Bộ lọc & Header
-        tvWalletSelector = view.findViewById(R.id.tvCategory); // Dùng text này để chọn Ví
+        tvWalletSelector = view.findViewById(R.id.tvCategory);
         tvSelectedDate = view.findViewById(R.id.tvSelectedDate);
         cardDateRangePicker = view.findViewById(R.id.cardDateRangePicker);
 
@@ -104,13 +108,20 @@ public class TransactionsFragment extends Fragment {
         // Click vào ngày -> Chọn ngày
         cardDateRangePicker.setOnClickListener(v -> showDateRangePicker());
 
-        // Click nút thêm -> Mở Dialog thêm mới
+        // Click nút thêm -> Mở Dialog thêm mới (truyền null)
         btnAdd.setOnClickListener(v -> showTransactionDialog(null));
     }
 
     private void setupObservers() {
-        // 1. Danh sách Giao dịch -> Hiển thị lên RecyclerView
-        viewModel.getTransactions().observe(getViewLifecycleOwner(), list -> renderer.render(list));
+        // 🔥 THAY ĐỔI 3: Gộp Observer transaction thành 1 cái duy nhất
+        viewModel.getTransactions().observe(getViewLifecycleOwner(), list -> {
+            if (list != null) {
+                // Khi có dữ liệu -> Tạo adapter mới và truyền hàm callback click
+                // this::showTransactionDialog nghĩa là khi click item, nó sẽ mở dialog Sửa/Xóa
+                adapter = new TransactionsAdapter(list, this::showTransactionDialog);
+                rcvTransactions.setAdapter(adapter);
+            }
+        });
 
         // 2. Danh sách Ví -> Lưu cache & Cập nhật Dialog chọn ví
         viewModel.getWallets().observe(getViewLifecycleOwner(), list -> cachedWallets = list);
@@ -147,7 +158,6 @@ public class TransactionsFragment extends Fragment {
 
         // Đổi màu số dư (Xanh/Đỏ)
         int colorRes = netChange >= 0 ? R.color.normal_weight : R.color.obese;
-        // Lưu ý: Đảm bảo bạn có màu normal_weight/obese trong colors.xml, hoặc thay bằng R.color.green/red
         tvBalance.setTextColor(ContextCompat.getColor(requireContext(), colorRes));
     }
 
@@ -158,7 +168,6 @@ public class TransactionsFragment extends Fragment {
             return;
         }
 
-        // Chuẩn bị dữ liệu tên ví
         String[] names = new String[cachedWallets.size() + 1];
         names[0] = "Tất cả ví";
         for (int i = 0; i < cachedWallets.size(); i++) {
@@ -167,19 +176,15 @@ public class TransactionsFragment extends Fragment {
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
 
-        // --- 1. TÙY CHỈNH TIÊU ĐỀ (Màu đen, Font đậm, Căn giữa) ---
         TextView titleView = new TextView(getContext());
         titleView.setText("Chọn ví xem giao dịch");
-        titleView.setPadding(0, 50, 0, 20); // Padding: Trái, Trên, Phải, Dưới
+        titleView.setPadding(0, 50, 0, 20);
         titleView.setTextSize(20);
-        titleView.setTextColor(android.graphics.Color.BLACK); // 🔥 Màu chữ tiêu đề
+        titleView.setTextColor(android.graphics.Color.BLACK);
         titleView.setGravity(android.view.Gravity.CENTER);
-        // titleView.setTypeface(ResourcesCompat.getFont(getContext(), R.font.poppins_bold)); // Nếu muốn set font
 
         builder.setCustomTitle(titleView);
 
-        // --- 2. TÙY CHỈNH DANH SÁCH (Dùng lại item_dropdown để có chữ đen) ---
-        // R.layout.item_dropdown là file bạn đã tạo cho Spinner (có textColor=black)
         ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(), R.layout.item_dropdown, names);
 
         builder.setAdapter(adapter, (dialog, which) -> {
@@ -187,32 +192,23 @@ public class TransactionsFragment extends Fragment {
             else viewModel.setWallet(cachedWallets.get(which - 1));
         });
 
-        // --- 3. TẠO DIALOG & SET BACKGROUND ---
         AlertDialog dialog = builder.create();
-
         if (dialog.getWindow() != null) {
-            // Set nền bo góc trắng (file bạn đã tạo)
             dialog.getWindow().setBackgroundDrawableResource(R.drawable.bg_dialog_rounded);
         }
-
         dialog.show();
     }
 
     // --- DIALOG CHỌN NGÀY ---
-// --- DIALOG CHỌN NGÀY (Giao diện giống HomeFragment) ---
-        private void showDateRangePicker() {
-        // 1. Tạo Builder & Set Theme
+    private void showDateRangePicker() {
         MaterialDatePicker.Builder<Pair<Long, Long>> builder =
                 MaterialDatePicker.Builder.dateRangePicker();
 
         builder.setTitleText("Chọn khoảng thời gian");
-
-        // 🔥 Áp dụng Theme (Nền xám nhạt, chữ đen)
         builder.setTheme(R.style.CustomDatePickerTheme);
 
         MaterialDatePicker<Pair<Long, Long>> picker = builder.build();
 
-        // 2. Xử lý khi bấm OK
         picker.addOnPositiveButtonClickListener(selection -> {
             if (selection.first != null && selection.second != null) {
                 SimpleDateFormat apiFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
@@ -223,15 +219,10 @@ public class TransactionsFragment extends Fragment {
 
                 String startApi = apiFormat.format(startDate);
                 String endApi = apiFormat.format(endDate);
-
                 String startDisplay = displayFormat.format(startDate);
                 String endDisplay = displayFormat.format(endDate);
 
-                // Cập nhật text hiển thị
                 tvSelectedDate.setText(String.format("%s - %s", startDisplay, endDisplay));
-
-                // 🔥 QUAN TRỌNG: Gọi setDateRange để ViewModel tải lại
-                // cả danh sách Transaction VÀ báo cáo CashFlow
                 viewModel.setDateRange(startApi, endApi);
             }
         });
@@ -239,11 +230,12 @@ public class TransactionsFragment extends Fragment {
         picker.show(getParentFragmentManager(), "TRANSACTION_DATE_PICKER");
     }
 
-    // --- DIALOG THÊM/SỬA GIAO DỊCH (Giữ nguyên logic cũ) ---
+    // --- DIALOG THÊM/SỬA GIAO DỊCH ---
+    // Hàm này được gọi khi bấm nút Thêm (+) HOẶC khi click vào Item trong RecyclerView
     private void showTransactionDialog(Transaction existingTransaction) {
         if (getContext() == null) return;
 
-        // Lấy ví đang được chọn từ ViewModel (có thể null nếu đang chọn Tất cả)
+        // Lấy ví đang được chọn từ ViewModel
         Wallet currentWallet = viewModel.selectedWallet.getValue();
 
         TransactionDialog.show(getContext(), existingTransaction, cachedWallets, cachedCategories, currentWallet,
@@ -259,7 +251,7 @@ public class TransactionsFragment extends Fragment {
         );
     }
 
-    // --- KHỞI TẠO NGÀY MẶC ĐỊNH (Đầu tháng -> Cuối tháng) ---
+    // --- KHỞI TẠO NGÀY MẶC ĐỊNH ---
     private void initDefaultDate() {
         Calendar calendar = Calendar.getInstance();
         SimpleDateFormat apiFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
