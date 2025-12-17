@@ -23,7 +23,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // 1. Init ViewModel & Kiểm tra đăng nhập
+        // 1. Init ViewModel & check login
         viewModel = new ViewModelProvider(this).get(MainViewModel.class);
 
         if (!viewModel.isUserLoggedIn()) {
@@ -31,16 +31,21 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        // 2. Setup Navigation Helper
-        navigationHelper = new MainNavigationHelper(getSupportFragmentManager(), R.id.fragment_container);
+        // 2. Setup Navigation Helper (🔥 FIX QUAN TRỌNG)
+        navigationHelper = new MainNavigationHelper(
+                this, // context để startActivity
+                getSupportFragmentManager(),
+                R.id.fragment_container
+        );
+
         BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_navigation);
 
-        // 3. Setup Logic chuyển tab
+        // 3. Handle bottom navigation
         bottomNavigationView.setOnItemSelectedListener(item ->
                 navigationHelper.onItemSelected(item.getItemId())
         );
 
-        // 4. Load mặc định Home nếu chưa có savedState (tránh load lại khi xoay màn hình)
+        // 4. Load Home mặc định
         if (savedInstanceState == null) {
             navigationHelper.loadDefaultFragment();
             bottomNavigationView.setSelectedItemId(R.id.nav_home);
@@ -49,8 +54,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void navigateToLogin() {
         Toast.makeText(this, "Vui lòng đăng nhập!", Toast.LENGTH_SHORT).show();
-        Intent intent = new Intent(this, LoginActivity.class);
-        startActivity(intent);
+        startActivity(new Intent(this, LoginActivity.class));
         finish();
     }
 }
