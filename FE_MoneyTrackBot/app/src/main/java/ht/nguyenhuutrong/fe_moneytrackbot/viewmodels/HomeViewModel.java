@@ -8,9 +8,11 @@ import androidx.lifecycle.MutableLiveData;
 
 import java.util.List;
 
+import ht.nguyenhuutrong.fe_moneytrackbot.models.CashFlowResponse;
 import ht.nguyenhuutrong.fe_moneytrackbot.models.Category;
 import ht.nguyenhuutrong.fe_moneytrackbot.models.Wallet;
 import ht.nguyenhuutrong.fe_moneytrackbot.repository.CategoryRepository;
+import ht.nguyenhuutrong.fe_moneytrackbot.repository.TransactionRepository;
 import ht.nguyenhuutrong.fe_moneytrackbot.repository.WalletRepository;
 
 public class HomeViewModel extends AndroidViewModel {
@@ -23,10 +25,16 @@ public class HomeViewModel extends AndroidViewModel {
     private final MutableLiveData<List<Category>> categories = new MutableLiveData<>();
     private final MutableLiveData<String> errorMessage = new MutableLiveData<>();
 
+    public MutableLiveData<CashFlowResponse> cashFlowData = new MutableLiveData<>();
+    public MutableLiveData<String> errorData = new MutableLiveData<>();
+
+    private TransactionRepository repository;
+
     public HomeViewModel(@NonNull Application application) {
         super(application);
         walletRepo = new WalletRepository(application);
         categoryRepo = new CategoryRepository(application);
+        repository = new TransactionRepository(application);
     }
 
     // --- Getters cho Fragment quan sát (Observe) ---
@@ -119,6 +127,20 @@ public class HomeViewModel extends AndroidViewModel {
             @Override
             public void onError(String message) {
                 errorMessage.setValue(message);
+            }
+        });
+    }
+
+    public void loadCashFlow(String startDate, String endDate) {
+        repository.getCashFlowReport(startDate, endDate, new TransactionRepository.ApiCallback<CashFlowResponse>() {
+            @Override
+            public void onSuccess(CashFlowResponse result) {
+                cashFlowData.postValue(result);
+            }
+
+            @Override
+            public void onError(String message) {
+                errorData.postValue(message);
             }
         });
     }

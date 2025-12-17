@@ -1,6 +1,7 @@
 package ht.nguyenhuutrong.fe_moneytrackbot.api.services;
 
 import java.util.List;
+import ht.nguyenhuutrong.fe_moneytrackbot.models.CashFlowResponse; // Nhớ import model này
 import ht.nguyenhuutrong.fe_moneytrackbot.models.Transaction;
 import retrofit2.Call;
 import retrofit2.http.Body;
@@ -26,4 +27,10 @@ public interface TransactionService {
 
     @DELETE("api/transactions/{id}/")
     Call<Void> deleteTransaction(@Path("id") int transactionId);
+
+    @GET("api/reports/cashflow/")
+    Call<CashFlowResponse> getCashFlow(
+            @Query("start_date") String startDate,  // Định dạng: yyyy-MM-dd
+            @Query("end_date") String endDate       // Định dạng: yyyy-MM-dd
+    );
 }

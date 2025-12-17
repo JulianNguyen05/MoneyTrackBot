@@ -166,7 +166,7 @@
                     android:id="@+id/tv_title"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="Thay đổi ròng"
+                    android:text="Tổng kết"
                     android:textSize="20sp"
                     android:fontFamily="@font/poppins_medium"
                     android:textAppearance="?attr/textAppearanceTitleMedium"
