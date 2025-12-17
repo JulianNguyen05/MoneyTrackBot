@@ -22,6 +22,11 @@ public class TransactionRepository {
         void onError(String message);
     }
 
+    public interface CashFlowCallback {
+        void onSuccess(CashFlowResponse data);
+        void onError(String message);
+    }
+
     // --- CÁC HÀM CŨ (CRUD Giao dịch) ---
 
     public void getTransactions(ApiCallback<List<Transaction>> callback) {
@@ -72,14 +77,14 @@ public class TransactionRepository {
     }
 
     // --- 🔥 HÀM MỚI: LẤY BÁO CÁO DÒNG TIỀN (Cho phần HomeFragment) ---
-    public void getCashFlowReport(String startDate, String endDate, ApiCallback<CashFlowResponse> callback) {
+    public void getCashFlowReport(String startDate, String endDate, CashFlowCallback callback) {
         RetrofitClient.getTransactionService(context).getCashFlow(startDate, endDate).enqueue(new Callback<CashFlowResponse>() {
             @Override
             public void onResponse(Call<CashFlowResponse> call, Response<CashFlowResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     callback.onSuccess(response.body());
                 } else {
-                    callback.onError("Không tải được dữ liệu: " + response.message());
+                    callback.onError("Lỗi tải dữ liệu: " + response.message());
                 }
             }
 

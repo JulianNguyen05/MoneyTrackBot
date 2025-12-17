@@ -6,7 +6,10 @@ import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.List;
+import java.util.Locale;
 
 import ht.nguyenhuutrong.fe_moneytrackbot.models.CashFlowResponse;
 import ht.nguyenhuutrong.fe_moneytrackbot.models.Category;
@@ -41,6 +44,7 @@ public class HomeViewModel extends AndroidViewModel {
     public LiveData<List<Wallet>> getWallets() { return wallets; }
     public LiveData<List<Category>> getCategories() { return categories; }
     public LiveData<String> getErrorMessage() { return errorMessage; }
+
 
     // --- CÁC HÀM XỬ LÝ DỮ LIỆU ---
 
@@ -132,16 +136,31 @@ public class HomeViewModel extends AndroidViewModel {
     }
 
     public void loadCashFlow(String startDate, String endDate) {
-        repository.getCashFlowReport(startDate, endDate, new TransactionRepository.ApiCallback<CashFlowResponse>() {
+        repository.getCashFlowReport(startDate, endDate, new TransactionRepository.CashFlowCallback() {
             @Override
-            public void onSuccess(CashFlowResponse result) {
-                cashFlowData.postValue(result);
+            public void onSuccess(CashFlowResponse data) {
+                cashFlowData.postValue(data);
             }
 
             @Override
             public void onError(String message) {
-                errorData.postValue(message);
+                // Xử lý lỗi nếu cần
             }
         });
+    }
+
+    public void loadCurrentMonthData() {
+        Calendar calendar = Calendar.getInstance();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+
+        // Ngày cuối tháng
+        calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
+        String endDate = sdf.format(calendar.getTime());
+
+        // Ngày đầu tháng
+        calendar.set(Calendar.DAY_OF_MONTH, 1);
+        String startDate = sdf.format(calendar.getTime());
+
+        loadCashFlow(startDate, endDate);
     }
 }
