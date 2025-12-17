@@ -4,7 +4,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/card_category"
     android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
+    android:layout_height="100dp"
     android:layout_marginEnd="12dp"
     android:layout_marginVertical="4dp"
     app:cardCornerRadius="12dp"
@@ -13,14 +13,14 @@
 
     <LinearLayout
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:orientation="vertical"
         android:gravity="center"
         android:padding="12dp">
 
         <ImageView
-            android:layout_width="24dp"
-            android:layout_height="24dp"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
             android:src="@drawable/ic_wallet"
             app:tint="#2E5D76"/>
 
@@ -28,9 +28,10 @@
             android:id="@+id/tv_category_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
+            android:layout_marginTop="5dp"
             android:text="Tên DM"
-            android:textSize="12sp"
+            android:textSize="15sp"
+            android:fontFamily="@font/poppins_medium"
             android:textStyle="bold"
             android:textColor="@color/black"/>
     </LinearLayout>

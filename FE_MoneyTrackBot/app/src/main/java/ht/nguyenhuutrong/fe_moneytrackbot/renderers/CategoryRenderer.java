@@ -34,10 +34,10 @@ public class CategoryRenderer {
 
     public void updateFilterUI(String currentType) {
         boolean isExpense = "expense".equals(currentType);
-        btnExpense.setBackgroundResource(isExpense ? R.drawable.bg_button_gradient_teal : R.drawable.bg_gray_rounded);
+        btnExpense.setBackgroundResource(isExpense ? R.drawable.bg_button_gradient : R.drawable.bg_gray_rounded);
         btnExpense.setTextColor(isExpense ? Color.WHITE : Color.BLACK);
 
-        btnIncome.setBackgroundResource(!isExpense ? R.drawable.bg_button_gradient_teal : R.drawable.bg_gray_rounded);
+        btnIncome.setBackgroundResource(!isExpense ? R.drawable.bg_button_gradient : R.drawable.bg_gray_rounded);
         btnIncome.setTextColor(!isExpense ? Color.WHITE : Color.BLACK);
     }
 

@@ -44,7 +44,7 @@
         app:boxCornerRadiusBottomStart="16dp"
         app:boxCornerRadiusTopEnd="16dp"
         app:boxStrokeColor="@color/comic_blue_dark"
-        app:hintTextColor="@color/comic_blue_dark"  
+        app:hintTextColor="@color/comic_blue_dark"
         app:boxStrokeWidth="2dp"
         app:boxCornerRadiusTopStart="16dp"
         app:layout_constraintBottom_toTopOf="@id/tilPassword"

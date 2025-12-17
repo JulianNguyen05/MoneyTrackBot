@@ -7,6 +7,7 @@
     android:layout_height="match_parent"
     android:clipToPadding="false"
     android:background="@color/off_white"
+    android:layout_marginBottom="90dp"
     android:padding="16dp"
     tools:context=".fragments.HomeFragment">
 
@@ -15,81 +16,6 @@
         android:layout_width="match_parent"
         android:orientation="vertical"
         android:layout_height="wrap_content">
-
-        <!-- PHẦN 1: HAI NÚT BO TRÒN TRÊN CÙNG -->
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/constraintLayout3"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-            <!-- CardView bọc button để tạo bóng -->
-            <androidx.cardview.widget.CardView
-                android:id="@+id/card_milestones"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:clickable="true"
-                android:clipToPadding="false"
-                android:focusable="true"
-                android:foreground="?android:attr/selectableItemBackground"
-                app:cardCornerRadius="18dp"
-                app:cardElevation="4dp"
-                app:cardUseCompatPadding="true"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent">
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btn_milestones"
-                    style="@style/Widget.Material3.Button.ElevatedButton"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_button_gradient_yellow"
-                    android:fontFamily="@font/poppins_medium"
-                    android:insetTop="0dp"
-                    android:insetBottom="0dp"
-                    android:padding="10dp"
-                    android:text="Những cột mốc"
-                    android:textColor="@color/black"
-                    android:textSize="12sp"
-                    app:backgroundTint="@null"
-                    app:cornerRadius="16dp"
-                    app:icon="@drawable/ic_trophy"
-                    app:iconTint="@color/yellow" />
-            </androidx.cardview.widget.CardView>
-
-            <androidx.cardview.widget.CardView
-                android:id="@+id/card_analysis"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:clickable="true"
-                android:clipToPadding="false"
-                android:focusable="true"
-                android:foreground="?android:attr/selectableItemBackground"
-                app:cardCornerRadius="18dp"
-                app:cardElevation="4dp"
-                app:cardUseCompatPadding="true"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent">
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btn_analysis"
-                    style="@style/Widget.Material3.Button.ElevatedButton"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_button_gradient_teal"
-                    android:fontFamily="@font/poppins_medium"
-                    android:insetTop="0dp"
-                    android:insetBottom="0dp"
-                    android:padding="10dp"
-                    android:text="Phân tích thêm"
-                    android:textColor="@color/black"
-                    android:textSize="12sp"
-                    app:backgroundTint="@null"
-                    app:cornerRadius="16dp"
-                    app:icon="@drawable/ic_chart"
-                    app:iconTint="@color/under_weight" />
-            </androidx.cardview.widget.CardView>
-
-        </androidx.constraintlayout.widget.ConstraintLayout>
 
         <!-- PHẦN 2: BOT CHÀO HỎI -->
         <androidx.constraintlayout.widget.ConstraintLayout
@@ -233,7 +159,7 @@
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@drawable/bg_button_gradient_teal"
+                android:background="@drawable/bg_button_gradient_tea"
                 android:padding="16dp">
 
                 <TextView
@@ -241,6 +167,8 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:text="Thay đổi ròng"
+                    android:textSize="20sp"
+                    android:fontFamily="@font/poppins_medium"
                     android:textAppearance="?attr/textAppearanceTitleMedium"
                     android:textColor="@color/black"
                     app:layout_constraintStart_toStartOf="parent"
@@ -260,9 +188,11 @@
                     android:id="@+id/tv_net_change"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="-35.000₫"
+                    android:text="12235.000₫"
+                    android:fontFamily="@font/poppins_medium"
+                    android:textSize="35sp"
                     android:textAppearance="?attr/textAppearanceDisplaySmall"
-                    android:textColor="@color/obese"
+                    android:textColor="@color/normal_weight"
                     android:layout_marginTop="4dp"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/tv_title"
@@ -410,7 +340,7 @@
                     android:id="@+id/btn_filter_expense"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:background="@drawable/bg_button_gradient_teal"
+                    android:background="@drawable/bg_button_gradient"
                     android:paddingHorizontal="16dp"
                     android:paddingVertical="6dp"
                     android:text="Chi phí"
