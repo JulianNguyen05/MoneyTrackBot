@@ -17,8 +17,8 @@ import ht.nguyenhuutrong.fe_moneytrackbot.api.services.WalletService;
 
 public class RetrofitClient {
 
-    // private static final String BASE_URL = "https://moneytrackbot.onrender.com/";
-    private static final String BASE_URL = "http://10.0.2.2:8000/";
+     private static final String BASE_URL = "https://moneytrackbot.onrender.com/";
+//    private static final String BASE_URL = "http://10.0.2.2:8000/";
 
     private static Retrofit retrofit;
 

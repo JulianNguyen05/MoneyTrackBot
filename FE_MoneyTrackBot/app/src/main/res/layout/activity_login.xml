@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?attr/colorSurface"
+    android:background="@color/off_white"
     android:padding="24dp">
 
     <ImageView
@@ -43,6 +43,9 @@
         app:boxCornerRadiusBottomEnd="16dp"
         app:boxCornerRadiusBottomStart="16dp"
         app:boxCornerRadiusTopEnd="16dp"
+        app:boxStrokeColor="@color/comic_blue_dark"
+        app:hintTextColor="@color/comic_blue_dark"  
+        app:boxStrokeWidth="2dp"
         app:boxCornerRadiusTopStart="16dp"
         app:layout_constraintBottom_toTopOf="@id/tilPassword"
         app:layout_constraintEnd_toEndOf="parent"
@@ -67,6 +70,9 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:hint="Mật khẩu"
+        app:boxStrokeColor="@color/comic_blue_dark"
+        app:hintTextColor="@color/comic_blue_dark"
+        app:boxStrokeWidth="2dp"
         app:boxBackgroundMode="outline"
         app:boxCornerRadiusBottomEnd="16dp"
         app:boxCornerRadiusBottomStart="16dp"

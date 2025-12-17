@@ -3,6 +3,7 @@ package ht.nguyenhuutrong.fe_moneytrackbot.activities;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -15,6 +16,7 @@ public class RegisterActivity extends AppCompatActivity {
 
     private EditText editTextUsername, editTextEmail, editTextPassword;
     private Button buttonRegister;
+    private TextView textViewBackToLogin;
     private RegisterViewModel viewModel;
 
     @Override
@@ -31,6 +33,8 @@ public class RegisterActivity extends AppCompatActivity {
         editTextPassword = findViewById(R.id.editTextPasswordRegister);
         buttonRegister = findViewById(R.id.buttonRegister);
 
+        textViewBackToLogin = findViewById(R.id.textViewBackToLogin);
+
         // 3. Setup Observers (Lắng nghe kết quả)
         setupObservers();
 
@@ -41,6 +45,10 @@ public class RegisterActivity extends AppCompatActivity {
             String pass = editTextPassword.getText().toString().trim();
 
             viewModel.register(user, email, pass);
+        });
+
+        textViewBackToLogin.setOnClickListener(v -> {
+            finish();
         });
     }
 
