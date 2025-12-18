@@ -19,7 +19,7 @@
 
         <!-- LOGIN (LAUNCHER) -->
         <activity
-            android:name=".activities.LoginActivity"
+            android:name=".ui.activities.LoginActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -29,18 +29,18 @@
 
         <!-- REGISTER -->
         <activity
-            android:name=".activities.RegisterActivity"
+            android:name=".ui.activities.RegisterActivity"
             android:exported="false" />
 
         <!-- MAIN -->
         <activity
-            android:name=".activities.MainActivity"
+            android:name=".ui.activities.MainActivity"
             android:exported="false"
             android:windowSoftInputMode="stateAlwaysHidden|adjustResize" />
 
         <!-- 🔥 CHATBOT ACTIVITY (BẮT BUỘC) -->
         <activity
-            android:name=".activities.ChatBotActivity"
+            android:name=".ui.activities.ChatBotActivity"
             android:exported="false"
             android:windowSoftInputMode="stateAlwaysHidden|adjustResize" />
 

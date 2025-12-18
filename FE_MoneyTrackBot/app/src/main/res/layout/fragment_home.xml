@@ -9,7 +9,7 @@
     android:background="@color/off_white"
     android:layout_marginBottom="90dp"
     android:padding="16dp"
-    tools:context=".fragments.HomeFragment">
+    tools:context=".ui.fragments.HomeFragment">
 
     <LinearLayout
         android:id="@+id/constraintLayout2"
