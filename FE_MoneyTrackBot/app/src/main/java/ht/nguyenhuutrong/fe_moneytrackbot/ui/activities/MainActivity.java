@@ -5,18 +5,21 @@ import android.os.Bundle;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import ht.nguyenhuutrong.fe_moneytrackbot.R;
-import ht.nguyenhuutrong.fe_moneytrackbot.utils.MainNavigationHelper;
+import ht.nguyenhuutrong.fe_moneytrackbot.ui.fragments.HomeFragment;
+import ht.nguyenhuutrong.fe_moneytrackbot.ui.fragments.SettingsFragment;
+import ht.nguyenhuutrong.fe_moneytrackbot.ui.fragments.TransactionsFragment;
 import ht.nguyenhuutrong.fe_moneytrackbot.ui.viewmodels.MainViewModel;
 
 public class MainActivity extends AppCompatActivity {
 
     private MainViewModel viewModel;
-    private MainNavigationHelper navigationHelper;
+    private BottomNavigationView bottomNavigationView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,25 +34,45 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        // 2. Setup Navigation Helper (🔥 FIX QUAN TRỌNG)
-        navigationHelper = new MainNavigationHelper(
-                this, // context để startActivity
-                getSupportFragmentManager(),
-                R.id.fragment_container
-        );
+        // 2. Init Views
+        bottomNavigationView = findViewById(R.id.bottom_navigation);
 
-        BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_navigation);
+        // 3. Handle bottom navigation trực tiếp
+        bottomNavigationView.setOnItemSelectedListener(item -> {
+            int itemId = item.getItemId();
+            Fragment selectedFragment = null;
 
-        // 3. Handle bottom navigation
-        bottomNavigationView.setOnItemSelectedListener(item ->
-                navigationHelper.onItemSelected(item.getItemId())
-        );
+            if (itemId == R.id.nav_home) {
+                selectedFragment = new HomeFragment();
+            } else if (itemId == R.id.nav_transactions) {
+                selectedFragment = new TransactionsFragment();
+            } else if (itemId == R.id.nav_chatbot) {
+                // Mở Activity ChatBot - Không dùng Fragment
+                startActivity(new Intent(this, ChatBotActivity.class));
+                return true;
+            } else if (itemId == R.id.nav_settings) {
+                selectedFragment = new SettingsFragment();
+            }
+
+            if (selectedFragment != null) {
+                loadFragment(selectedFragment);
+                return true;
+            }
+            return false;
+        });
 
         // 4. Load Home mặc định
         if (savedInstanceState == null) {
-            navigationHelper.loadDefaultFragment();
+            loadFragment(new HomeFragment());
             bottomNavigationView.setSelectedItemId(R.id.nav_home);
         }
+    }
+
+    // Hàm load Fragment thay thế cho logic trong Helper
+    private void loadFragment(Fragment fragment) {
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.fragment_container, fragment)
+                .commit();
     }
 
     private void navigateToLogin() {

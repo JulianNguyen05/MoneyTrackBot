@@ -1,10 +1,13 @@
 package ht.nguyenhuutrong.fe_moneytrackbot.ui.fragments;
 
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -12,50 +15,112 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
+import com.google.android.material.card.MaterialCardView;
+
 import ht.nguyenhuutrong.fe_moneytrackbot.R;
 import ht.nguyenhuutrong.fe_moneytrackbot.ui.activities.LoginActivity;
 import ht.nguyenhuutrong.fe_moneytrackbot.ui.dialogs.SettingsDialog;
-import ht.nguyenhuutrong.fe_moneytrackbot.utils.SettingsUIManager;
 import ht.nguyenhuutrong.fe_moneytrackbot.ui.viewmodels.SettingsViewModel;
 
 public class SettingsFragment extends Fragment {
 
     private SettingsViewModel viewModel;
-    private SettingsUIManager uiManager;
+    private View rootView;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_settings, container, false);
+        // Ánh xạ layout fragment_settings mới
+        rootView = inflater.inflate(R.layout.fragment_settings, container, false);
 
-        // 1. Khởi tạo ViewModel & UIManager
         viewModel = new ViewModelProvider(this).get(SettingsViewModel.class);
-        uiManager = new SettingsUIManager(view);
 
-        // 2. Thiết lập UI & Sự kiện click
-        uiManager.setupUI(v -> showLogoutDialog());
+        setupUI();
+        setupObservers();
 
-        // 3. Lắng nghe sự kiện đăng xuất thành công
+        return rootView;
+    }
+
+    private void setupObservers() {
         viewModel.getLogoutEvent().observe(getViewLifecycleOwner(), isLoggedOut -> {
-            if (isLoggedOut) {
+            if (isLoggedOut != null && isLoggedOut) {
                 navigateToLogin();
             }
         });
+    }
 
-        return view;
+    private void setupUI() {
+        // 1. Nút chuyển đổi Theme (ID mới: btnThemeToggle)
+        MaterialCardView btnThemeToggle = rootView.findViewById(R.id.btnThemeToggle);
+        if (btnThemeToggle != null) {
+            btnThemeToggle.setOnClickListener(v ->
+                    Toast.makeText(getContext(), "Chế độ sáng/tối đang được phát triển", Toast.LENGTH_SHORT).show()
+            );
+        }
+
+        // 2. Các mục cài đặt Double (Có Title và Subtitle)
+        setupDoubleItem(R.id.itemWallet, "Ví và Danh mục", "Quản lý nguồn tiền và phân loại", R.drawable.ic_wallet);
+        setupDoubleItem(R.id.itemAccount, "Tài khoản", "Thông tin cá nhân và bảo mật", R.drawable.ic_settings);
+
+        // 3. Các mục cài đặt Single (Chỉ có Title)
+        setupSingleItem(R.id.itemPremium, "Đăng xuất", R.drawable.ic_add, v -> showLogoutDialog());
+        setupSingleItem(R.id.itemFeature, "Tính năng mới", R.drawable.ic_add, null);
+        setupSingleItem(R.id.itemContact, "Liên hệ hỗ trợ", R.drawable.ic_add, null);
+        setupSingleItem(R.id.itemTerms, "Điều khoản sử dụng", R.drawable.ic_settings, null);
+        setupSingleItem(R.id.itemPrivacy, "Chính sách bảo mật", R.drawable.ic_settings, null);
+    }
+
+    /**
+     * Hỗ trợ thiết lập các item dùng layout item_setting_card_double
+     */
+    private void setupDoubleItem(int id, String title, String subtitle, int iconRes) {
+        View item = rootView.findViewById(id);
+        if (item == null) return;
+
+        TextView tvTitle = item.findViewById(R.id.title);
+        TextView tvSubtitle = item.findViewById(R.id.subtitle);
+        ImageView imgIcon = item.findViewById(R.id.icon);
+
+        if (tvTitle != null) tvTitle.setText(title);
+        if (tvSubtitle != null) tvSubtitle.setText(subtitle);
+        if (imgIcon != null) imgIcon.setImageResource(iconRes);
+
+        item.setOnClickListener(v -> Toast.makeText(getContext(), title, Toast.LENGTH_SHORT).show());
+    }
+
+    /**
+     * Hỗ trợ thiết lập các item dùng layout item_setting_card_single
+     */
+    private void setupSingleItem(int id, String title, int iconRes, View.OnClickListener customListener) {
+        View item = rootView.findViewById(id);
+        if (item == null) return;
+
+        TextView tvTitle = item.findViewById(R.id.title);
+        ImageView imgIcon = item.findViewById(R.id.icon);
+
+        if (tvTitle != null) tvTitle.setText(title);
+        if (imgIcon != null) {
+            imgIcon.setImageResource(iconRes);
+            // Highlight màu đặc biệt cho nút Đăng xuất
+            if (title.equals("Đăng xuất")) {
+                imgIcon.setColorFilter(Color.parseColor("#FFB74D")); // Màu cam theo theme
+            }
+        }
+
+        if (customListener != null) {
+            item.setOnClickListener(customListener);
+        } else {
+            item.setOnClickListener(v -> Toast.makeText(getContext(), title, Toast.LENGTH_SHORT).show());
+        }
     }
 
     private void showLogoutDialog() {
-        SettingsDialog.showLogoutConfirmation(getContext(), () -> {
-            // Khi người dùng bấm "Đồng ý" -> Gọi ViewModel
-            viewModel.logout();
-        });
+        if (getContext() == null) return;
+        SettingsDialog.showLogoutConfirmation(getContext(), () -> viewModel.logout());
     }
 
     private void navigateToLogin() {
         if (getContext() == null) return;
-        Toast.makeText(getContext(), "Đã đăng xuất!", Toast.LENGTH_SHORT).show();
-
         Intent intent = new Intent(getContext(), LoginActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
