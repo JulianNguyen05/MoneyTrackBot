@@ -49,15 +49,18 @@ class ChatbotView(APIView):
         user = request.user
         message = request.data.get("message", "").strip()
 
-        # =============================
+        # ==================================================
         # LOG: USER INPUT
-        # =============================
+        # ==================================================
         print("\n" + "=" * 70)
         print(f"👤 USER ({user.username}): {message}")
         print("=" * 70)
 
         if not message:
-            return Response({"reply": "Tin nhắn rỗng"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"reply": "Tin nhắn rỗng"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         if model is None:
             return Response(
@@ -66,9 +69,9 @@ class ChatbotView(APIView):
             )
 
         try:
-            # =============================
-            # (1) LOAD CONTEXT USER
-            # =============================
+            # ==================================================
+            # (1) LOAD USER CONTEXT
+            # ==================================================
             wallets = list(
                 Wallet.objects.filter(user=user).values("id", "name")
             )
@@ -76,32 +79,33 @@ class ChatbotView(APIView):
                 Category.objects.filter(user=user).values("id", "name", "type")
             )
 
-            # =============================
+            # ==================================================
             # (2) BUILD PROMPT
-            # =============================
+            # ==================================================
             prompt = self.build_prompt(message, wallets, categories)
 
-            # =============================
+            # ==================================================
             # (3) CALL GEMINI
-            # =============================
+            # ==================================================
             generation_config = genai.types.GenerationConfig(
                 response_mime_type="application/json"
             )
             response = model.generate_content(
-                prompt, generation_config=generation_config
+                prompt,
+                generation_config=generation_config
             )
 
-            # =============================
+            # ==================================================
             # LOG: AI RAW RESPONSE
-            # =============================
+            # ==================================================
             print("🤖 AI RAW RESPONSE (JSON)")
             print("-" * 70)
             print(response.text)
             print("-" * 70)
 
-            # =============================
-            # (4) PARSE JSON
-            # =============================
+            # ==================================================
+            # (4) PARSE AI RESPONSE
+            # ==================================================
             ai_data = json.loads(response.text)
             action = ai_data.get("action")
             reply_message = ai_data.get("reply", "Đã xử lý xong.")
@@ -121,55 +125,21 @@ class ChatbotView(APIView):
             # ==================================================
             if action == "error_validation":
                 print(f"⚠️ BOT REPLY: {reply_message}")
-                return Response({"reply": reply_message}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {"reply": reply_message},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
             # ==================================================
             # (C) ANSWER QUESTION
             # ==================================================
             if action == "answer_question":
-                query_type = ai_data.get("query_type")
-                data = ai_data.get("data", {})
-                final_reply = ""
-
-                if query_type == "total_expense_current_month":
-                    now = timezone.now()
-                    total = (
-                        Transaction.objects.filter(
-                            user=user,
-                            category__type="expense",
-                            date__year=now.year,
-                            date__month=now.month
-                        )
-                        .aggregate(total=Sum("amount"))["total"]
-                        or Decimal(0)
-                    )
-                    final_reply = f"Tổng chi tháng này của bạn là {abs(total):,.0f}đ."
-
-                elif query_type == "get_wallet_balance":
-                    wallet_id = data.get("wallet_id")
-                    if wallet_id:
-                        wallet = Wallet.objects.get(id=wallet_id, user=user)
-                        final_reply = f"Số dư ví '{wallet.name}' là {wallet.balance:,.0f}đ."
-                    else:
-                        final_reply = "Bạn muốn hỏi số dư của ví nào?"
-
-                elif query_type == "total_expense_specific_month":
-                    month = data.get("month")
-                    now = timezone.now()
-                    total = (
-                        Transaction.objects.filter(
-                            user=user,
-                            category__type="expense",
-                            date__year=now.year,
-                            date__month=month
-                        )
-                        .aggregate(total=Sum("amount"))["total"]
-                        or Decimal(0)
-                    )
-                    final_reply = f"Tổng chi tháng {month} là {abs(total):,.0f}đ."
-
-                else:
-                    final_reply = "Tôi chưa hỗ trợ truy vấn này."
+                final_reply = self.handle_answer_question(
+                    user=user,
+                    ai_data=ai_data,
+                    wallets=wallets,
+                    categories=categories
+                )
 
                 print(f"💬 BOT REPLY: {final_reply}")
                 return Response({"reply": final_reply})
@@ -178,27 +148,7 @@ class ChatbotView(APIView):
             # (D) MANAGE WALLET
             # ==================================================
             if action == "manage_wallet":
-                data = ai_data.get("data", {})
-                sub_action = data.get("sub_action")
-
-                if sub_action == "create":
-                    Wallet.objects.create(
-                        user=user,
-                        name=data["name"],
-                        balance=Decimal(str(data.get("balance", 0)))
-                    )
-
-                elif sub_action == "update":
-                    wallet = Wallet.objects.get(id=data["wallet_id"], user=user)
-                    if "new_name" in data:
-                        wallet.name = data["new_name"]
-                    if "new_balance" in data:
-                        wallet.balance = Decimal(str(data["new_balance"]))
-                    wallet.save()
-
-                elif sub_action == "delete":
-                    Wallet.objects.filter(id=data["wallet_id"], user=user).delete()
-
+                self.handle_manage_wallet(user, ai_data.get("data", {}))
                 print(f"💬 BOT REPLY: {reply_message}")
                 return Response({"reply": reply_message})
 
@@ -206,70 +156,44 @@ class ChatbotView(APIView):
             # (E) MANAGE CATEGORY
             # ==================================================
             if action == "manage_category":
-                data = ai_data.get("data", {})
-                sub_action = data.get("sub_action")
-
-                if sub_action == "create":
-                    Category.objects.create(
-                        user=user,
-                        name=data["name"],
-                        type=data.get("type", "expense")
-                    )
-                elif sub_action == "delete":
-                    Category.objects.filter(
-                        id=data["category_id"], user=user
-                    ).delete()
-
+                self.handle_manage_category(user, ai_data.get("data", {}))
                 print(f"💬 BOT REPLY: {reply_message}")
                 return Response({"reply": reply_message})
 
             # ==================================================
-            # (F) NORMAL CHAT
+            # (F) NORMAL CHAT / FALLBACK
             # ==================================================
             print(f"💬 BOT REPLY: {reply_message}")
             return Response({"reply": reply_message})
 
         except Exception as e:
-
             error_message = str(e)
 
             print("❌ CHATBOT ERROR")
-
             print("-" * 70)
-
             print(error_message)
-
             print("-" * 70)
 
-            # ===== HANDLE QUOTA ERROR =====
-
+            # ==================================================
+            # HANDLE GEMINI QUOTA ERROR
+            # ==================================================
             if "429" in error_message or "Quota exceeded" in error_message:
                 return Response(
-
                     {
-
                         "reply": (
-
                             "🤖 Bot đang tạm nghỉ do vượt giới hạn sử dụng AI miễn phí.\n"
-
                             "⏳ Bạn vui lòng thử lại sau khoảng 1 phút nhé!"
-
                         )
-
                     },
-
                     status=status.HTTP_429_TOO_MANY_REQUESTS
-
                 )
 
-            # ===== OTHER ERROR =====
-
+            # ==================================================
+            # OTHER ERROR
+            # ==================================================
             return Response(
-
                 {"reply": "Xin lỗi, hệ thống chatbot đang gặp sự cố."},
-
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
-
             )
 
     # ==================================================
@@ -280,12 +204,29 @@ class ChatbotView(APIView):
         return f"""
             Bạn là MoneyTrack Bot – trợ lý tài chính thông minh.
             Ngày: {today}. Ngôn ngữ: Tiếng Việt.
-            
-            Danh sách ví: {json.dumps(wallets)}
-            Danh sách danh mục: {json.dumps(categories)}
-            
-            Chỉ trả về JSON duy nhất.
-            
+        
+            Danh sách ví (wallets): {json.dumps(wallets)}
+            Danh sách danh mục (categories): {json.dumps(categories)}
+        
+            NHIỆM VỤ:
+            - Phân tích tin nhắn người dùng
+            - Chỉ trả về 1 JSON DUY NHẤT
+            - Không giải thích, không markdown
+        
+            CÁC HÀNH ĐỘNG HỢP LỆ:
+            1. create_transaction
+            2. answer_question
+            3. manage_wallet
+            4. manage_category
+            5. error_validation
+        
+            CÁC query_type CHO answer_question:
+            - total_expense_current_month
+            - total_expense_specific_month
+            - get_wallet_balance
+            - list_wallets        ← liệt kê ví
+            - list_categories     ← liệt kê danh mục
+        
             Tin nhắn người dùng: "{message}"
             """
 
