@@ -78,8 +78,7 @@ class ChatbotView(APIView):
                 self.create_transaction_from_ai(user, data)
                 return Response({"reply": reply_message})
 
-            # --- (B) LỖI VALIDATION (PHẦN BỔ SUNG HOÀN THIỆN) ---
-            # Xử lý KỊCH BẢN 4: Không tạo giao dịch và báo lỗi cho người dùng.
+            # --- (B) LỖI VALIDATION ---
             elif action == "error_validation":
                 return Response({"reply": reply_message}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -89,7 +88,6 @@ class ChatbotView(APIView):
                 data = ai_data.get("data", {})
                 final_reply = ""
 
-                # --- 1. Tổng chi tháng này ---
                 if query_type == "total_expense_current_month":
                     now = timezone.now()
                     total = Transaction.objects.filter(
@@ -98,9 +96,8 @@ class ChatbotView(APIView):
                         date__year=now.year,
                         date__month=now.month
                     ).aggregate(total_sum=Sum('amount'))['total_sum'] or Decimal(0)
-                    final_reply = f"Tổng chi tháng này của bạn là {total:,.0f}đ."
+                    final_reply = f"Tổng chi tháng này của bạn là {abs(total):,.0f}đ."
 
-                # --- 2. Số dư ví ---
                 elif query_type == "get_wallet_balance":
                     wallet_id = data.get("wallet_id")
                     if wallet_id is None:
@@ -112,7 +109,6 @@ class ChatbotView(APIView):
                         except Wallet.DoesNotExist:
                             final_reply = "Xin lỗi, tôi không tìm thấy ví đó trong tài khoản của bạn."
 
-                # --- 3. Tổng chi của tháng cụ thể ---
                 elif query_type == "total_expense_specific_month":
                     month = data.get("month")
                     if month is None:
@@ -122,16 +118,47 @@ class ChatbotView(APIView):
                         total = Transaction.objects.filter(
                             user=user,
                             category__type='expense',
-                            date__year=now.year,  # (Giả định user hỏi năm hiện tại)
+                            date__year=now.year,
                             date__month=month
                         ).aggregate(total_sum=Sum('amount'))['total_sum'] or Decimal(0)
-                        final_reply = f"Tổng chi tháng {month} của bạn là {total:,.0f}đ."
-
-                # --- Không biết xử lý ---
+                        final_reply = f"Tổng chi tháng {month} của bạn là {abs(total):,.0f}đ."
                 else:
-                    final_reply = "Tôi đã nhận được câu hỏi, nhưng hiện tại tôi chưa được lập trình để tính điều này."
+                    final_reply = "Tôi chưa hỗ trợ kiểu truy vấn này."
 
                 return Response({"reply": final_reply})
+
+            # --- (E) QUẢN LÝ VÍ (MỚI) ---
+            elif action == "manage_wallet":
+                data = ai_data.get("data", {})
+                sub_action = data.get("sub_action")
+
+                if sub_action == "create":
+                    Wallet.objects.create(user=user, name=data['name'], balance=Decimal(str(data.get('balance', 0))))
+                elif sub_action == "update":
+                    wallet = Wallet.objects.get(id=data['wallet_id'], user=user)
+                    if 'new_name' in data: wallet.name = data['new_name']
+                    if 'new_balance' in data: wallet.balance = Decimal(str(data['new_balance']))
+                    wallet.save()
+                elif sub_action == "delete":
+                    Wallet.objects.filter(id=data['wallet_id'], user=user).delete()
+
+                return Response({"reply": reply_message})
+
+            # --- (F) QUẢN LÝ DANH MỤC (MỚI) ---
+            elif action == "manage_category":
+                data = ai_data.get("data", {})
+                sub_action = data.get("sub_action")
+
+                if sub_action == "create":
+                    Category.objects.create(user=user, name=data['name'], type=data.get('type', 'expense'))
+                elif sub_action == "delete":
+                    Category.objects.filter(id=data['category_id'], user=user).delete()
+
+                return Response({"reply": reply_message})
+
+            # --- (G) GIAO TIẾP TỰ NHIÊN ---
+            elif action == "normal_chat":
+                return Response({"reply": reply_message})
 
             # --- (D) KHÔNG HIỂU ---
             else:
@@ -141,94 +168,57 @@ class ChatbotView(APIView):
             print(f"--- AI API Error --- \n{e}\n------------------")
             return Response({"reply": f"Xin lỗi, Bot AI đang gặp lỗi: {str(e)}"})
 
-    # ==========================================================
-    # 🧠 Hàm "Dạy" AI cách hiểu câu hỏi và yêu cầu JSON
-    # ==========================================================
     def build_prompt(self, message, wallets, categories):
         wallets_str = json.dumps(wallets)
         categories_str = json.dumps(categories)
         today_str = datetime.date.today().strftime('%Y-%m-%d')
 
         prompt = f"""
-        Bạn là MoneyTrack Bot - một trợ lý tài chính thông minh, thân thiện và có kiến thức sâu rộng về quản lý chi tiêu tại Việt Nam.
-        Ngày hôm nay là: {today_str}. Ngôn ngữ phản hồi: Tiếng Việt.
+        Bạn là MoneyTrack Bot - một trợ lý tài chính thông minh, thân thiện. Ngày: {today_str}. Ngôn ngữ: Tiếng Việt.
 
         Kiến thức hệ thống:
-        1. Danh sách Ví của người dùng: {wallets_str}
-        2. Danh sách Danh mục (Thu nhập/Chi tiêu): {categories_str}
+        1. Danh sách Ví: {wallets_str}
+        2. Danh sách Danh mục: {categories_str}
 
-        Nhiệm vụ: Phân tích tin nhắn người dùng và LUÔN phản hồi bằng một đối tượng JSON duy nhất.
+        Nhiệm vụ: Phân tích tin nhắn và trả về JSON duy nhất.
 
-        ---
-        KỊCH BẢN 1: TẠO GIAO DỊCH (Hành động: create_transaction)
-        Dấu hiệu: Người dùng cung cấp số tiền và hoạt động thu/chi.
-        Lưu ý: Nếu người dùng không nói rõ ví, hãy chọn ví đầu tiên trong danh sách. Nếu không rõ danh mục, hãy chọn danh mục phù hợp nhất dựa trên mô tả.
-        => JSON:
-        {{
-          "action": "create_transaction",
-          "reply": "✅ Đã ghi nhận: (Mô tả ngắn) (Số tiền) vào ví (Tên ví).",
-          "data": {{ "amount": float, "date": "{today_str}", "description": "string", "wallet_id": int, "category_id": int }}
-        }}
+        --- 
+        KỊCH BẢN 1: TẠO GIAO DỊCH (create_transaction)
+        {{ "action": "create_transaction", "reply": "thông báo", "data": {{ "amount": float, "date": "{today_str}", "description": "string", "wallet_id": int, "category_id": int }} }}
 
-        ---
-        KỊCH BẢN 2: TRUY VẤN DỮ LIỆU (Hành động: answer_question)
-        - query_type: "total_expense_current_month", "get_wallet_balance", "total_expense_specific_month".
-        - data: Chứa tham số như {{"wallet_id": id}} hoặc {{"month": int}}.
+        KỊCH BẢN 2: TRUY VẤN (answer_question)
+        - query_type: "total_expense_current_month", "get_wallet_balance", "total_expense_specific_month"
 
-        ---
-        KỊCH BẢN 3: GIAO TIẾP TỰ NHIÊN & CHÀO HỎI (Hành động: normal_chat)
-        Dấu hiệu: Người dùng chào hỏi, hỏi thăm sức khỏe, hoặc khen ngợi bot.
-        Yêu cầu: Trả lời hóm hỉnh, thân thiện, có thể dùng icon (emoji).
-        => JSON: {{ "action": "normal_chat", "reply": "Chào chủ nhân! Chúc bạn một ngày quản lý chi tiêu thật thông minh nhé! 😊" }}
+        KỊCH BẢN 3: QUẢN LÝ VÍ (manage_wallet)
+        - Tạo ví: "tạo ví mới tên Tiền mặt có 1 triệu" -> sub_action: "create", name: "Tiền mặt", balance: 1000000
+        - Sửa ví: "đổi tên ví MoMo thành MoMo Pay" -> sub_action: "update", wallet_id: (id), new_name: "MoMo Pay"
+        - Xóa ví: "xóa ví Thẻ đi" -> sub_action: "delete", wallet_id: (id)
 
-        ---
-        KỊCH BẢN 4: TƯ VẤN & GIÁO DỤC TÀI CHÍNH (Hành động: normal_chat)
-        Dấu hiệu: Hỏi về kiến thức (Lạm phát là gì?, Cách tiết kiệm tiền?, Quy tắc 50/30/20...).
-        Yêu cầu: Giải thích ngắn gọn, dễ hiểu dưới 3 câu.
-        => JSON: {{ "action": "normal_chat", "reply": "Quy tắc 50/30/20 là chia thu nhập thành 3 phần: 50% nhu cầu thiết yếu, 30% sở thích và 20% để tiết kiệm đó!" }}
+        KỊCH BẢN 4: QUẢN LÝ DANH MỤC (manage_category)
+        - Tạo: "thêm mục Tiền nhà loại chi tiêu" -> sub_action: "create", name: "Tiền nhà", type: "expense"
+        - Xóa: "xóa danh mục Ăn uống" -> sub_action: "delete", category_id: (id)
 
-        ---
-        KỊCH BẢN 5: LỖI VALIDATION & THIẾU THÔNG TIN (Hành động: error_validation)
-        Dấu hiệu: Muốn tạo giao dịch nhưng không tìm thấy ví/danh mục khớp, HOẶC thiếu số tiền.
-        => Ví dụ: "Ăn trưa bằng ví MoMo" (Nhưng không có số tiền).
-        => JSON: {{ "action": "error_validation", "reply": "Món ăn trưa đó hết bao nhiêu tiền thế bạn? Hãy nhập thêm số tiền để mình lưu lại nhé!" }}
+        KỊCH BẢN 5: GIAO TIẾP (normal_chat) - Chào hỏi, tán gẫu.
+        KỊCH BẢN 6: LỖI VALIDATION (error_validation) - Thiếu ví/danh mục khi tạo giao dịch.
 
-        ---
-        KỊCH BẢN 6: KHÔNG HIỂU (Hành động: unknown)
-        Dấu hiệu: Các yêu cầu không liên quan đến tài chính (Thời tiết hôm nay thế nào?, Hát một bài đi...).
-        => JSON: {{ "action": "unknown", "reply": "Xin lỗi, mình chỉ tập trung vào tài chính thôi. Để mình giúp bạn quản lý tiền bạc nhé!" }}
-
-        Bây giờ, hãy phân tích tin nhắn sau: "{message}"
+        Tin nhắn: "{message}"
         """
         return prompt
 
-    # ==========================================================
-    # 🧾 Hàm tạo giao dịch thực tế
-    # ==========================================================
     def create_transaction_from_ai(self, user, data):
         try:
             with transaction.atomic():
                 wallet = Wallet.objects.get(id=data['wallet_id'], user=user)
                 category = Category.objects.get(id=data['category_id'], user=user)
-                amount = Decimal(data['amount'])
-                date = data.get('date', datetime.date.today())
+                raw_amount = Decimal(str(data['amount']))
+                final_amount = -abs(raw_amount) if category.type == 'expense' else abs(raw_amount)
 
                 Transaction.objects.create(
-                    user=user,
-                    wallet=wallet,
-                    category=category,
-                    amount=amount,
-                    date=date,
+                    user=user, wallet=wallet, category=category,
+                    amount=final_amount, date=data.get('date', datetime.date.today()),
                     description=data.get('description', category.name).capitalize()
                 )
-
-                # Cập nhật số dư ví
-                if category.type == 'income':
-                    wallet.balance += amount
-                else:
-                    wallet.balance -= amount
+                wallet.balance += final_amount
                 wallet.save(update_fields=['balance'])
         except Exception as e:
-            print(f"Lỗi khi tạo Giao dịch từ AI: {e}")
-            # Bạn có thể ném lỗi (raise e) để chatbot báo lỗi ngược lại cho user
-            raise Exception(f"Lỗi server khi lưu giao dịch: {e}")
+            raise Exception(f"Lỗi lưu giao dịch: {e}")

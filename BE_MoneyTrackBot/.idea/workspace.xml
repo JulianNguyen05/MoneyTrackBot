@@ -6,14 +6,9 @@
   <component name="ChangeListManager">
     <list default="true" id="2d3c3080-0e50-4bf8-9897-15689bd616fa" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/api/views/chatbot.py" beforeDir="false" afterPath="$PROJECT_DIR$/api/views/chatbot.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/db.sqlite3" beforeDir="false" afterPath="$PROJECT_DIR$/db.sqlite3" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/java/ht/nguyenhuutrong/fe_moneytrackbot/ui/activities/ChatBotActivity.java" beforeDir="false" afterPath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/java/ht/nguyenhuutrong/fe_moneytrackbot/ui/activities/ChatBotActivity.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/java/ht/nguyenhuutrong/fe_moneytrackbot/ui/activities/MainActivity.java" beforeDir="false" afterPath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/java/ht/nguyenhuutrong/fe_moneytrackbot/ui/activities/MainActivity.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/java/ht/nguyenhuutrong/fe_moneytrackbot/ui/fragments/SettingsFragment.java" beforeDir="false" afterPath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/java/ht/nguyenhuutrong/fe_moneytrackbot/ui/fragments/SettingsFragment.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/java/ht/nguyenhuutrong/fe_moneytrackbot/utils/MainNavigationHelper.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/java/ht/nguyenhuutrong/fe_moneytrackbot/utils/SettingsUIManager.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/res/drawable/bg_edittext_rounded_gray.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/res/drawable/bg_edittext_rounded_gray.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/res/layout/activity_chatbot.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/res/layout/activity_chatbot.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/java/ht/nguyenhuutrong/fe_moneytrackbot/data/api/RetrofitClient.java" beforeDir="false" afterPath="$PROJECT_DIR$/../FE_MoneyTrackBot/app/src/main/java/ht/nguyenhuutrong/fe_moneytrackbot/data/api/RetrofitClient.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
