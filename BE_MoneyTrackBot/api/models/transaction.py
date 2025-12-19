@@ -44,16 +44,21 @@ class Transaction(models.Model):
             self.process_balance_change(is_add=False)
             super().delete(*args, **kwargs)
 
+    from django.db.models import F
+
     def process_balance_change(self, is_add=True):
-        """Xử lý tính toán và cập nhật vào Database"""
-        transaction_type = self.category.type
+        transaction_type = str(self.category.type).strip().lower()
 
-        # Logic tính Delta
+        # Lấy giá trị tuyệt đối để tránh lỗi âm chồng âm
+        amount = abs(self.amount)
+
         if transaction_type == 'income':
-            delta = self.amount if is_add else -self.amount
+            delta = amount if is_add else -amount
+        elif transaction_type == 'expense':
+            delta = -amount if is_add else amount
         else:
-            delta = -self.amount if is_add else self.amount
+            delta = 0
 
-        # Sử dụng F() để update trực tiếp trong DB, tránh sai sót số liệu
         self.wallet.balance = F('balance') + delta
         self.wallet.save(update_fields=['balance'])
+        self.wallet.refresh_from_db()
