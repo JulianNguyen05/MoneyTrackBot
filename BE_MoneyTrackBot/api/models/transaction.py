@@ -1,4 +1,5 @@
-from django.db import models
+from django.db import models, transaction
+from django.db.models import F
 from django.contrib.auth.models import User
 from .wallet import Wallet
 from .category import Category
@@ -20,52 +21,39 @@ class Transaction(models.Model):
     def __str__(self):
         return f"{self.category.name}: {self.amount:,.0f}đ"
 
-    # ================= LOGIC TỰ ĐỘNG CẬP NHẬT VÍ =================
-
     def save(self, *args, **kwargs):
-        """
-        Khi LƯU giao dịch:
-        - Nếu là mới tạo: Cộng/Trừ tiền ví ngay lập tức.
-        - Nếu là sửa (update): Logic phức tạp hơn (cần trừ cái cũ, cộng cái mới) - Tạm thời chưa xử lý ở đây để đơn giản.
-        """
-        # 1. Kiểm tra xem đây là tạo mới (chưa có ID) hay sửa
-        is_new = self.pk is None
+        with transaction.atomic():
+            if self.pk:
+                # TRƯỜNG HỢP UPDATE: Hoàn tác số tiền cũ trước
+                old_obj = Transaction.objects.get(pk=self.pk)
+                old_obj.process_balance_change(is_add=False)
 
-        # 2. Lưu giao dịch vào database trước
-        super().save(*args, **kwargs)
+                # Sau khi hoàn tác, ta lấy lại instance ví từ DB
+                # để tránh dùng giá trị cũ đang lưu trong RAM
+                self.wallet.refresh_from_db()
 
-        # 3. Chỉ cập nhật ví nếu là giao dịch mới
-        if is_new:
+            # Lưu giao dịch mới/cập nhật
+            super().save(*args, **kwargs)
+
+            # Cập nhật số dư mới
             self.process_balance_change(is_add=True)
 
     def delete(self, *args, **kwargs):
-        """
-        Khi XÓA giao dịch:
-        - Phải hoàn tác lại số dư (Revert balance).
-        - Ví dụ: Xóa một khoản chi tiêu -> Tiền phải quay về ví.
-        """
-        # 1. Hoàn tiền trước khi xóa
-        self.process_balance_change(is_add=False)
-
-        # 2. Xóa giao dịch
-        super().delete(*args, **kwargs)
+        with transaction.atomic():
+            # Hoàn tác số dư trước khi xóa hẳn giao dịch
+            self.process_balance_change(is_add=False)
+            super().delete(*args, **kwargs)
 
     def process_balance_change(self, is_add=True):
-        """
-        Hàm xử lý cộng trừ tiền chung.
-        :param is_add: True nếu là Thêm giao dịch, False nếu là Xóa giao dịch (đảo ngược)
-        """
-        # Lấy loại danh mục: 'income' (thu) hoặc 'expense' (chi)
+        """Xử lý tính toán và cập nhật vào Database"""
         transaction_type = self.category.type
 
-        # Xác định dấu: + hay -
+        # Logic tính Delta
         if transaction_type == 'income':
-            # Nếu là Thu nhập: Thêm thì Cộng (+), Xóa thì Trừ (-)
             delta = self.amount if is_add else -self.amount
         else:
-            # Nếu là Chi tiêu: Thêm thì Trừ (-), Xóa thì Cộng (+)
             delta = -self.amount if is_add else self.amount
 
-        # Cập nhật và lưu ví
-        self.wallet.balance += delta
-        self.wallet.save()
+        # Sử dụng F() để update trực tiếp trong DB, tránh sai sót số liệu
+        self.wallet.balance = F('balance') + delta
+        self.wallet.save(update_fields=['balance'])

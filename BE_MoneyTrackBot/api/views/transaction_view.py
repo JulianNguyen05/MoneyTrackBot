@@ -17,58 +17,35 @@ class TransactionViewSet(BaseViewSet):
         filters.OrderingFilter
     )
     filterset_fields = ['category', 'wallet']
-    search_fields = ['description']
+    search_fields = ['description'] # Đã đồng bộ với filter trong get_queryset bên dưới
     ordering_fields = ['date', 'amount']
 
     def perform_create(self, serializer):
-        """Tạo giao dịch mới và cập nhật số dư ví."""
-        transaction_obj = serializer.save(user=self.request.user)
-        wallet = transaction_obj.wallet
-        if transaction_obj.category.type == 'income':
-            wallet.balance += transaction_obj.amount
-        else:
-            wallet.balance -= transaction_obj.amount
-        wallet.save(update_fields=['balance'])
+        """
+        Giao diện chỉ việc lưu.
+        Mọi logic cộng tiền đã nằm trong Transaction.save() ở models.py
+        """
+        serializer.save(user=self.request.user)
 
     def perform_update(self, serializer):
-        """Cập nhật giao dịch và điều chỉnh số dư ví."""
-        old_transaction = self.get_object()
-        old_wallet = old_transaction.wallet
-        old_amount = old_transaction.amount
-        old_type = old_transaction.category.type
-
-        if old_type == 'income':
-            old_wallet.balance -= old_amount
-        else:
-            old_wallet.balance += old_amount
-        old_wallet.save(update_fields=['balance'])
-
-        new_transaction = serializer.save()
-        new_wallet = new_transaction.wallet
-
-        if old_wallet.id == new_wallet.id:
-            new_wallet.refresh_from_db()
-
-        if new_transaction.category.type == 'income':
-            new_wallet.balance += new_transaction.amount
-        else:
-            new_wallet.balance -= new_transaction.amount
-        new_wallet.save(update_fields=['balance'])
+        """
+        Giao diện chỉ việc lưu.
+        Model.save() sẽ tự nhận biết đây là Update để hoàn tác tiền cũ và cộng tiền mới.
+        """
+        serializer.save()
 
     def perform_destroy(self, instance):
-        """Xóa giao dịch và hoàn tác số dư ví."""
-        wallet = instance.wallet
-        if instance.category.type == 'income':
-            wallet.balance -= instance.amount
-        else:
-            wallet.balance += instance.amount
-        wallet.save(update_fields=['balance'])
+        """
+        Giao diện chỉ việc xóa.
+        Model.delete() sẽ tự thực hiện hoàn tác số dư trước khi mất dữ liệu.
+        """
         instance.delete()
 
     def get_queryset(self):
+        # Chỉ lấy giao dịch của chính user đang đăng nhập
         queryset = Transaction.objects.filter(user=self.request.user)
 
-        # 1. Lọc theo Ví (nếu có tham số wallet_id)
+        # 1. Lọc theo Ví (wallet_id)
         wallet_id = self.request.query_params.get('wallet_id')
         if wallet_id:
             queryset = queryset.filter(wallet_id=wallet_id)
@@ -79,9 +56,9 @@ class TransactionViewSet(BaseViewSet):
         if start_date and end_date:
             queryset = queryset.filter(date__range=[start_date, end_date])
 
-        # 3. Tìm kiếm từ khóa (search)
+        # 3. Tìm kiếm theo description (đã sửa note thành description cho đúng model)
         search_term = self.request.query_params.get('search')
         if search_term:
-            queryset = queryset.filter(note__icontains=search_term)
+            queryset = queryset.filter(description__icontains=search_term)
 
-        return queryset.order_by('-date')  # Sắp xếp mới nhất trước
+        return queryset.order_by('-date')
