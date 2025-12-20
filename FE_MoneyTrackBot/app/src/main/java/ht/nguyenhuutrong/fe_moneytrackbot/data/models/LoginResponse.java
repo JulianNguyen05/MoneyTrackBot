@@ -2,6 +2,12 @@ package ht.nguyenhuutrong.fe_moneytrackbot.data.models;
 
 import com.google.gson.annotations.SerializedName;
 
+/**
+ * LoginResponse
+ * --------------------------------------------------
+ * Response model trả về sau khi đăng nhập thành công.
+ * Chứa access token và refresh token.
+ */
 public class LoginResponse {
 
     @SerializedName("access")
@@ -10,9 +16,14 @@ public class LoginResponse {
     @SerializedName("refresh")
     private String refresh;
 
-    // ✅ Bắt buộc cần constructor rỗng để Gson parse dữ liệu JSON từ server
+    /**
+     * Constructor rỗng.
+     * Cần thiết cho Gson khi parse JSON từ server.
+     */
     public LoginResponse() {
     }
+
+    // ===== Getters & Setters =====
 
     public String getAccess() {
         return access;

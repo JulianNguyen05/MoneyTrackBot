@@ -15,73 +15,79 @@ import ht.nguyenhuutrong.fe_moneytrackbot.ui.viewmodels.LoginViewModel;
 
 public class LoginActivity extends AppCompatActivity {
 
-    private EditText editTextUsername, editTextPassword;
-    private Button buttonLogin;
-    private TextView textViewRegister;
-    private LoginViewModel loginViewModel;
+    private EditText etUsername;
+    private EditText etPassword;
+    private Button btnLogin;
+    private TextView tvRegister;
+
+    private LoginViewModel viewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        // 1. Init ViewModel
-        loginViewModel = new ViewModelProvider(this).get(LoginViewModel.class);
+        // Khởi tạo ViewModel (MVVM)
+        viewModel = new ViewModelProvider(this).get(LoginViewModel.class);
 
-        // 2. Check đăng nhập (Nếu đã có token thì đi tiếp luôn)
-        if (loginViewModel.isUserLoggedIn()) {
-            startMainActivity();
+        // Nếu đã đăng nhập (có token) → đi thẳng vào Main
+        if (viewModel.isUserLoggedIn()) {
+            navigateToMain();
             return;
         }
 
         initViews();
-        setupObservers();
-
-        // 3. Xử lý sự kiện Click
-        buttonLogin.setOnClickListener(v -> {
-            String user = editTextUsername.getText().toString().trim();
-            String pass = editTextPassword.getText().toString().trim();
-            loginViewModel.login(user, pass);
-        });
-
-        textViewRegister.setOnClickListener(v ->
-                startActivity(new Intent(LoginActivity.this, RegisterActivity.class))
-        );
+        observeViewModel();
+        setupActions();
     }
 
     private void initViews() {
-        editTextUsername = findViewById(R.id.editTextUsername);
-        editTextPassword = findViewById(R.id.editTextPassword);
-        buttonLogin = findViewById(R.id.buttonLogin);
-        textViewRegister = findViewById(R.id.textViewRegister);
+        etUsername = findViewById(R.id.editTextUsername);
+        etPassword = findViewById(R.id.editTextPassword);
+        btnLogin = findViewById(R.id.buttonLogin);
+        tvRegister = findViewById(R.id.textViewRegister);
     }
 
-    private void setupObservers() {
-        // Lắng nghe: Đăng nhập thành công -> Chuyển màn hình
-        loginViewModel.getLoginSuccess().observe(this, success -> {
-            if (success) {
+    private void setupActions() {
+        btnLogin.setOnClickListener(v -> {
+            String username = etUsername.getText().toString().trim();
+            String password = etPassword.getText().toString().trim();
+            viewModel.login(username, password);
+        });
+
+        tvRegister.setOnClickListener(v ->
+                startActivity(new Intent(this, RegisterActivity.class))
+        );
+    }
+
+    private void observeViewModel() {
+        // Đăng nhập thành công → chuyển màn hình
+        viewModel.getLoginSuccess().observe(this, success -> {
+            if (Boolean.TRUE.equals(success)) {
                 Toast.makeText(this, "Đăng nhập thành công!", Toast.LENGTH_SHORT).show();
-                startMainActivity();
+                navigateToMain();
             }
         });
 
-        // Lắng nghe: Có lỗi -> Hiện Toast
-        loginViewModel.getErrorMessage().observe(this, message -> {
-            if (message != null) {
+        // Hiển thị lỗi từ ViewModel
+        viewModel.getErrorMessage().observe(this, message -> {
+            if (message != null && !message.isEmpty()) {
                 Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
             }
         });
 
-        // (Optional) Lắng nghe loading để disable nút login tránh spam click
-        loginViewModel.getIsLoading().observe(this, isLoading -> {
-            buttonLogin.setEnabled(!isLoading);
-            buttonLogin.setText(isLoading ? "Đang xử lý..." : "Đăng nhập");
+        // Trạng thái loading → tránh spam click
+        viewModel.getIsLoading().observe(this, isLoading -> {
+            btnLogin.setEnabled(!isLoading);
+            btnLogin.setText(isLoading ? "Đang xử lý..." : "Đăng nhập");
         });
     }
 
-    private void startMainActivity() {
-        Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-        startActivity(intent);
+    /**
+     * Điều hướng sang MainActivity và kết thúc LoginActivity
+     */
+    private void navigateToMain() {
+        startActivity(new Intent(this, MainActivity.class));
         finish();
     }
 }

@@ -1,6 +1,7 @@
 package ht.nguyenhuutrong.fe_moneytrackbot.data.api.services;
 
 import java.util.List;
+
 import ht.nguyenhuutrong.fe_moneytrackbot.data.models.CashFlowResponse;
 import ht.nguyenhuutrong.fe_moneytrackbot.data.models.Transaction;
 import retrofit2.Call;
@@ -12,37 +13,69 @@ import retrofit2.http.PUT;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 
+/**
+ * TransactionService
+ * --------------------------------------------------
+ * Cung cấp các API quản lý giao dịch và báo cáo dòng tiền
+ */
 public interface TransactionService {
 
-    // --- 1. LẤY DANH SÁCH GIAO DỊCH (Có lọc) ---
-    // Gộp tất cả vào 1 hàm. Truyền null cho tham số không dùng.
+    /**
+     * Lấy danh sách giao dịch với các điều kiện lọc tùy chọn.
+     * Truyền null cho các tham số không sử dụng.
+     *
+     * @param searchTerm Từ khóa tìm kiếm
+     * @param walletId   ID ví
+     * @param startDate  Ngày bắt đầu (yyyy-MM-dd)
+     * @param endDate    Ngày kết thúc (yyyy-MM-dd)
+     */
     @GET("api/transactions/")
     Call<List<Transaction>> getTransactions(
             @Query("search") String searchTerm,
-            @Query("wallet_id") Integer walletId,   // Có thể null
-            @Query("start_date") String startDate,  // Có thể null
-            @Query("end_date") String endDate       // Có thể null
+            @Query("wallet_id") Integer walletId,
+            @Query("start_date") String startDate,
+            @Query("end_date") String endDate
     );
 
-    // --- 2. CÁC THAO TÁC CRUD CƠ BẢN ---
+    /**
+     * Tạo giao dịch mới
+     */
     @POST("api/transactions/")
     Call<Transaction> createTransaction(@Body Transaction transaction);
 
+    /**
+     * Lấy chi tiết giao dịch theo ID
+     */
     @GET("api/transactions/{id}/")
     Call<Transaction> getTransactionDetails(@Path("id") int transactionId);
 
+    /**
+     * Cập nhật giao dịch theo ID
+     */
     @PUT("api/transactions/{id}/")
-    Call<Transaction> updateTransaction(@Path("id") int transactionId, @Body Transaction transaction);
+    Call<Transaction> updateTransaction(
+            @Path("id") int transactionId,
+            @Body Transaction transaction
+    );
 
+    /**
+     * Xóa giao dịch theo ID
+     */
     @DELETE("api/transactions/{id}/")
     Call<Void> deleteTransaction(@Path("id") int transactionId);
 
-    // --- 3. BÁO CÁO TỔNG KẾT (CASHFLOW) ---
-    // Gộp thành 1 hàm có hỗ trợ lọc theo ví
+    /**
+     * Lấy báo cáo dòng tiền (Cash Flow) theo khoảng thời gian.
+     * Có thể lọc theo ví.
+     *
+     * @param startDate Ngày bắt đầu (yyyy-MM-dd)
+     * @param endDate   Ngày kết thúc (yyyy-MM-dd)
+     * @param walletId  ID ví (có thể null)
+     */
     @GET("api/reports/cashflow/")
     Call<CashFlowResponse> getCashFlow(
             @Query("start_date") String startDate,
             @Query("end_date") String endDate,
-            @Query("wallet_id") Integer walletId    // Có thể null
+            @Query("wallet_id") Integer walletId
     );
 }

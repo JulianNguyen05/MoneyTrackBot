@@ -20,28 +20,30 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+/**
+ * ViewModel quản lý giao dịch
+ * - Lấy danh sách giao dịch & tổng kết dòng tiền
+ * - Lọc theo ngày & ví
+ * - CRUD giao dịch
+ */
 public class TransactionViewModel extends AndroidViewModel {
 
-    // --- REPOSITORIES (Cho các thao tác cơ bản) ---
     private final TransactionRepository transactionRepo;
     private final WalletRepository walletRepo;
     private final CategoryRepository categoryRepo;
 
-    // --- LIVEDATA (Dữ liệu UI quan sát) ---
+    // --- LiveData để UI observe ---
     private final MutableLiveData<List<Transaction>> transactions = new MutableLiveData<>();
     private final MutableLiveData<List<Wallet>> wallets = new MutableLiveData<>();
     private final MutableLiveData<List<Category>> categories = new MutableLiveData<>();
     private final MutableLiveData<CashFlowResponse> cashFlow = new MutableLiveData<>();
     private final MutableLiveData<String> message = new MutableLiveData<>();
 
-    // --- BỘ LỌC (FILTER STATE) ---
-    // Ví đang chọn (null = Tất cả)
+    // --- Bộ lọc ---
     public MutableLiveData<Wallet> selectedWallet = new MutableLiveData<>(null);
-    // Ngày bắt đầu và kết thúc (yyyy-MM-dd)
     public MutableLiveData<String> currentStartDate = new MutableLiveData<>();
     public MutableLiveData<String> currentEndDate = new MutableLiveData<>();
 
-    // --- CONSTRUCTOR ---
     public TransactionViewModel(@NonNull Application application) {
         super(application);
         transactionRepo = new TransactionRepository(application);
@@ -49,32 +51,27 @@ public class TransactionViewModel extends AndroidViewModel {
         categoryRepo = new CategoryRepository(application);
     }
 
-    // --- GETTERS ---
+    // --- Getters LiveData ---
     public LiveData<List<Transaction>> getTransactions() { return transactions; }
     public LiveData<List<Wallet>> getWallets() { return wallets; }
     public LiveData<List<Category>> getCategories() { return categories; }
     public LiveData<CashFlowResponse> getCashFlow() { return cashFlow; }
     public LiveData<String> getMessage() { return message; }
 
-    // --- LOAD DATA CHÍNH (Giao dịch + Tổng kết) ---
-    // Hàm này sẽ tự động lấy theo bộ lọc (Ngày & Ví)
+    // --- LOAD DỮ LIỆU THEO BỘ LỌC ---
     public void loadData() {
         String start = currentStartDate.getValue();
         String end = currentEndDate.getValue();
         Integer walletId = selectedWallet.getValue() != null ? selectedWallet.getValue().getId() : null;
 
-        // 1. Gọi API lấy danh sách giao dịch (Có lọc)
-        // Chúng ta gọi trực tiếp Retrofit ở đây vì Repository cũ của bạn chưa hỗ trợ tham số lọc
+        // 1. Lấy danh sách giao dịch
         RetrofitClient.getTransactionService(getApplication())
                 .getTransactions(null, walletId, start, end)
                 .enqueue(new Callback<List<Transaction>>() {
                     @Override
                     public void onResponse(Call<List<Transaction>> call, Response<List<Transaction>> response) {
-                        if (response.isSuccessful()) {
-                            transactions.postValue(response.body());
-                        } else {
-                            message.postValue("Lỗi tải giao dịch: " + response.message());
-                        }
+                        if (response.isSuccessful()) transactions.postValue(response.body());
+                        else message.postValue("Lỗi tải giao dịch: " + response.message());
                     }
                     @Override
                     public void onFailure(Call<List<Transaction>> call, Throwable t) {
@@ -82,36 +79,34 @@ public class TransactionViewModel extends AndroidViewModel {
                     }
                 });
 
-        // 2. Gọi API lấy tổng tiền (CashFlow)
+        // 2. Lấy tổng kết dòng tiền
         RetrofitClient.getTransactionService(getApplication())
                 .getCashFlow(start, end, walletId)
                 .enqueue(new Callback<CashFlowResponse>() {
                     @Override
                     public void onResponse(Call<CashFlowResponse> call, Response<CashFlowResponse> response) {
-                        if (response.isSuccessful()) {
-                            cashFlow.postValue(response.body());
-                        }
+                        if (response.isSuccessful()) cashFlow.postValue(response.body());
                     }
                     @Override
                     public void onFailure(Call<CashFlowResponse> call, Throwable t) {
-                        // Không cần báo lỗi cashflow để tránh spam toast
+                        // Không báo lỗi để tránh spam toast
                     }
                 });
     }
 
-    // --- CÁC HÀM SETTER CHO BỘ LỌC ---
+    // --- Cập nhật bộ lọc và tự động load lại ---
     public void setDateRange(String start, String end) {
         currentStartDate.setValue(start);
         currentEndDate.setValue(end);
-        loadData(); // Tự động tải lại dữ liệu khi đổi ngày
+        loadData();
     }
 
     public void setWallet(Wallet wallet) {
         selectedWallet.setValue(wallet);
-        loadData(); // Tự động tải lại dữ liệu khi đổi ví
+        loadData();
     }
 
-    // --- LOAD DANH MỤC KHÁC ---
+    // --- Load danh sách Wallet & Category ---
     public void loadWallets() {
         walletRepo.getWallets(new WalletRepository.WalletCallback() {
             @Override public void onSuccess(List<Wallet> data) { wallets.setValue(data); }
@@ -126,12 +121,12 @@ public class TransactionViewModel extends AndroidViewModel {
         });
     }
 
-    // --- CRUD GIAO DỊCH (Giữ nguyên dùng Repository) ---
+    // --- CRUD Giao dịch ---
     public void createTransaction(Transaction t) {
         transactionRepo.createTransaction(t, new TransactionRepository.ApiCallback<Transaction>() {
             @Override public void onSuccess(Transaction result) {
                 message.setValue("Thêm thành công");
-                loadData(); // Refresh lại danh sách sau khi thêm
+                loadData();
             }
             @Override public void onError(String msg) { message.setValue(msg); }
         });

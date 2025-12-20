@@ -16,57 +16,73 @@ import com.google.android.material.textfield.TextInputEditText;
 import ht.nguyenhuutrong.fe_moneytrackbot.R;
 import ht.nguyenhuutrong.fe_moneytrackbot.data.models.Category;
 
+/**
+ * Dialog dùng chung cho:
+ * - Thêm danh mục
+ * - Cập nhật danh mục
+ * - Xóa danh mục
+ */
 public class CategoryDialog {
 
-    // Interface lắng nghe đủ 3 sự kiện: Thêm, Sửa, Xóa
+    /**
+     * Listener xử lý hành động từ Dialog
+     */
     public interface OnCategoryActionListener {
         void onCreate(String name, String type);
         void onUpdate(Category category);
         void onDelete(int id);
     }
 
-    // 1. Dialog THÊM MỚI
-    public static void showAdd(Context context, String defaultType, OnCategoryActionListener listener) {
-        View dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_add_category, null);
+    /**
+     * Hiển thị dialog THÊM danh mục
+     */
+    public static void showAdd(Context context, String defaultType,
+                               OnCategoryActionListener listener) {
 
-        // Ánh xạ View
-        TextView tvTitle = dialogView.findViewById(R.id.tv_dialog_title);
-        TextInputEditText etName = dialogView.findViewById(R.id.et_category_name);
-        RadioGroup rgType = dialogView.findViewById(R.id.rg_category_type);
-        RadioButton rbExpense = dialogView.findViewById(R.id.rb_expense);
-        RadioButton rbIncome = dialogView.findViewById(R.id.rb_income);
-        TextView btnCancel = dialogView.findViewById(R.id.btn_cancel);
-        TextView btnConfirm = dialogView.findViewById(R.id.btn_confirm);
+        View view = LayoutInflater.from(context)
+                .inflate(R.layout.dialog_add_category, null);
 
-        // --- Setup giao diện THÊM ---
+        // Views
+        TextView tvTitle = view.findViewById(R.id.tv_dialog_title);
+        TextInputEditText etName = view.findViewById(R.id.et_category_name);
+        RadioButton rbExpense = view.findViewById(R.id.rb_expense);
+        RadioButton rbIncome = view.findViewById(R.id.rb_income);
+        TextView btnCancel = view.findViewById(R.id.btn_cancel);
+        TextView btnConfirm = view.findViewById(R.id.btn_confirm);
+
+        // UI setup
         tvTitle.setText("Thêm danh mục mới");
         btnConfirm.setText("THÊM");
 
-        // Mặc định chọn loại theo tham số truyền vào
+        // Chọn loại mặc định
         if ("income".equals(defaultType)) {
             rbIncome.setChecked(true);
         } else {
             rbExpense.setChecked(true);
         }
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        builder.setView(dialogView);
-        AlertDialog dialog = builder.create();
+        AlertDialog dialog = new AlertDialog.Builder(context)
+                .setView(view)
+                .create();
 
-        // Làm nền trong suốt để hiện bo góc
+        // Bo góc dialog
         if (dialog.getWindow() != null) {
-            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            dialog.getWindow().setBackgroundDrawable(
+                    new ColorDrawable(Color.TRANSPARENT)
+            );
         }
 
-        // Nút HỦY -> Đóng dialog
         btnCancel.setOnClickListener(v -> dialog.dismiss());
 
-        // Nút THÊM -> Gọi hàm onCreate
         btnConfirm.setOnClickListener(v -> {
-            String name = etName.getText() != null ? etName.getText().toString().trim() : "";
+            String name = etName.getText() == null
+                    ? ""
+                    : etName.getText().toString().trim();
 
             if (name.isEmpty()) {
-                Toast.makeText(context, "Vui lòng nhập tên danh mục!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(context,
+                        "Vui lòng nhập tên danh mục!",
+                        Toast.LENGTH_SHORT).show();
                 return;
             }
 
@@ -75,29 +91,38 @@ public class CategoryDialog {
             if (listener != null) {
                 listener.onCreate(name, type);
             }
+
             dialog.dismiss();
         });
 
         dialog.show();
     }
 
-    // 2. Dialog SỬA / XÓA (Tái sử dụng layout nhưng đổi nút)
-    public static void showUpdateDelete(Context context, Category category, OnCategoryActionListener listener) {
-        View dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_add_category, null);
+    /**
+     * Hiển thị dialog CHI TIẾT – cho phép CẬP NHẬT hoặc XÓA
+     */
+    public static void showUpdateDelete(Context context, Category category,
+                                        OnCategoryActionListener listener) {
 
-        // Ánh xạ View
-        TextView tvTitle = dialogView.findViewById(R.id.tv_dialog_title);
-        TextInputEditText etName = dialogView.findViewById(R.id.et_category_name);
-        RadioGroup rgType = dialogView.findViewById(R.id.rg_category_type);
-        RadioButton rbExpense = dialogView.findViewById(R.id.rb_expense);
-        RadioButton rbIncome = dialogView.findViewById(R.id.rb_income);
-        TextView btnCancel = dialogView.findViewById(R.id.btn_cancel);   // Sẽ biến thành nút XÓA
-        TextView btnConfirm = dialogView.findViewById(R.id.btn_confirm); // Sẽ biến thành nút CẬP NHẬT
+        View view = LayoutInflater.from(context)
+                .inflate(R.layout.dialog_add_category, null);
 
-        // --- Setup giao diện SỬA ---
+        // Views
+        TextView tvTitle = view.findViewById(R.id.tv_dialog_title);
+        TextInputEditText etName = view.findViewById(R.id.et_category_name);
+        RadioButton rbExpense = view.findViewById(R.id.rb_expense);
+        RadioButton rbIncome = view.findViewById(R.id.rb_income);
+        TextView btnCancel = view.findViewById(R.id.btn_cancel);
+        TextView btnConfirm = view.findViewById(R.id.btn_confirm);
+
+        // UI setup
         tvTitle.setText("Chi tiết danh mục");
+        btnConfirm.setText("CẬP NHẬT");
 
-        // Điền dữ liệu cũ
+        btnCancel.setText("XÓA");
+        btnCancel.setTextColor(Color.parseColor("#F44336"));
+
+        // Fill dữ liệu cũ
         etName.setText(category.getName());
         if ("income".equals(category.getType())) {
             rbIncome.setChecked(true);
@@ -105,45 +130,44 @@ public class CategoryDialog {
             rbExpense.setChecked(true);
         }
 
-        // 🔥 BIẾN HÌNH NÚT BẤM
-        btnConfirm.setText("CẬP NHẬT");
-
-        btnCancel.setText("XÓA"); // Đổi text thành XÓA
-        btnCancel.setTextColor(Color.parseColor("#F44336")); // Đổi màu chữ thành Đỏ
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        builder.setView(dialogView);
-        AlertDialog dialog = builder.create();
+        AlertDialog dialog = new AlertDialog.Builder(context)
+                .setView(view)
+                .create();
 
         if (dialog.getWindow() != null) {
-            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            dialog.getWindow().setBackgroundDrawable(
+                    new ColorDrawable(Color.TRANSPARENT)
+            );
         }
 
-        // Nút Trái (Lúc này là XÓA) -> Gọi onDelete
+        // XÓA danh mục
         btnCancel.setOnClickListener(v -> {
-            // Có thể thêm Dialog xác nhận "Bạn có chắc chắn xóa?" ở đây nếu muốn
             if (listener != null) {
                 listener.onDelete(category.getId());
             }
             dialog.dismiss();
         });
 
-        // Nút Phải (Lúc này là CẬP NHẬT) -> Gọi onUpdate
+        // CẬP NHẬT danh mục
         btnConfirm.setOnClickListener(v -> {
-            String name = etName.getText() != null ? etName.getText().toString().trim() : "";
+            String name = etName.getText() == null
+                    ? ""
+                    : etName.getText().toString().trim();
 
             if (name.isEmpty()) {
-                Toast.makeText(context, "Tên không được để trống!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(context,
+                        "Tên không được để trống!",
+                        Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            // Cập nhật vào object category
             category.setName(name);
             category.setType(rbIncome.isChecked() ? "income" : "expense");
 
             if (listener != null) {
                 listener.onUpdate(category);
             }
+
             dialog.dismiss();
         });
 

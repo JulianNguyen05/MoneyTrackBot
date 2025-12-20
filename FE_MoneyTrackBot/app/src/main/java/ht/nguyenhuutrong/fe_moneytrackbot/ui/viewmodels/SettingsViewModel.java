@@ -8,6 +8,11 @@ import androidx.lifecycle.MutableLiveData;
 
 import ht.nguyenhuutrong.fe_moneytrackbot.data.api.TokenManager;
 
+/**
+ * ViewModel quản lý các cài đặt của người dùng
+ * - Xử lý đăng xuất
+ * - Thông báo sự kiện đăng xuất cho UI qua LiveData
+ */
 public class SettingsViewModel extends AndroidViewModel {
 
     private final MutableLiveData<Boolean> logoutEvent = new MutableLiveData<>();
@@ -16,15 +21,21 @@ public class SettingsViewModel extends AndroidViewModel {
         super(application);
     }
 
+    // --- LiveData để Fragment observe sự kiện logout ---
     public LiveData<Boolean> getLogoutEvent() {
         return logoutEvent;
     }
 
+    /**
+     * Thực hiện đăng xuất
+     * - Xóa token lưu trữ
+     * - Cập nhật LiveData để Fragment điều hướng về LoginActivity
+     */
     public void logout() {
         // 1. Xóa Token
         TokenManager.getInstance(getApplication()).clearToken();
 
-        // 2. Thông báo sự kiện đăng xuất thành công
+        // 2. Thông báo sự kiện đăng xuất
         logoutEvent.setValue(true);
     }
 }

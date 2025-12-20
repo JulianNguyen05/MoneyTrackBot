@@ -3,30 +3,46 @@ package ht.nguyenhuutrong.fe_moneytrackbot.data.models;
 import com.google.gson.annotations.SerializedName;
 import java.io.Serializable;
 
+/**
+ * Transaction
+ * --------------------------------------------------
+ * Model giao dịch (Thu / Chi) dùng cho:
+ * - Parse dữ liệu từ API
+ * - Gửi dữ liệu tạo giao dịch mới
+ */
 public class Transaction implements Serializable {
+
+    // ===== Basic fields =====
+
     @SerializedName("id")
     private int id;
 
     @SerializedName("amount")
     private double amount;
 
-    // --- CÁC TRƯỜNG LIÊN QUAN ĐẾN CATEGORY ---
+    // ===== Category fields =====
+
+    /** ID category dùng khi tạo mới giao dịch */
     @SerializedName("category")
-    private int categoryId; // Dùng để gửi ID khi tạo mới
+    private int categoryId;
 
+    /** Tên category để hiển thị UI */
     @SerializedName("category_name")
-    private String categoryName; // Dùng để hiển thị tên
+    private String categoryName;
 
-    // 🔥 QUAN TRỌNG: Thêm trường này để Adapter biết là Thu hay Chi
+    /** Loại category: "income" | "expense" (dùng cho Adapter) */
     @SerializedName("category_type")
     private String categoryType;
 
-    // --- CÁC TRƯỜNG KHÁC ---
-    @SerializedName("description") // Backend trả về key "description"
-    private String description;    // Đổi tên biến từ 'note' sang 'description' cho đồng bộ
+    // ===== Transaction info =====
+
+    @SerializedName("description")
+    private String description;
 
     @SerializedName("date")
     private String date;
+
+    // ===== Wallet fields =====
 
     @SerializedName("wallet")
     private int walletId;
@@ -34,11 +50,15 @@ public class Transaction implements Serializable {
     @SerializedName("wallet_name")
     private String walletName;
 
-    // --- Constructor rỗng (Cần thiết cho Gson) ---
+    // ===== Constructors =====
+
+    /** Constructor rỗng bắt buộc cho Gson */
     public Transaction() {
     }
 
-    // --- Constructor để TẠO MỚI (Gửi lên Server) ---
+    /**
+     * Constructor dùng khi tạo giao dịch mới (POST).
+     */
     public Transaction(double amount, int categoryId, String description, String date, int walletId) {
         this.amount = amount;
         this.categoryId = categoryId;
@@ -47,23 +67,50 @@ public class Transaction implements Serializable {
         this.walletId = walletId;
     }
 
-    // --- GETTERS ---
-    public int getId() { return id; }
-    public double getAmount() { return amount; }
+    // ===== Getters =====
 
-    public int getCategoryId() { return categoryId; }
-    public String getCategoryName() { return categoryName; }
+    public int getId() {
+        return id;
+    }
 
-    // Hàm này Adapter đang gọi để kiểm tra Thu/Chi
+    public double getAmount() {
+        return amount;
+    }
+
+    public int getCategoryId() {
+        return categoryId;
+    }
+
+    public String getCategoryName() {
+        return categoryName;
+    }
+
+    /**
+     * Dùng để xác định Thu / Chi trong Adapter.
+     * Mặc định là "income" nếu backend không trả về.
+     */
     public String getType() {
         return categoryType != null ? categoryType : "income";
     }
 
-    public String getDescription() { return description; }
-    // Giữ lại getNote() nếu code cũ còn dùng, nhưng trỏ về description
-    public String getNote() { return description; }
+    public String getDescription() {
+        return description;
+    }
 
-    public String getDate() { return date; }
-    public int getWalletId() { return walletId; }
-    public String getWalletName() { return walletName; }
+    /** Tương thích ngược với code cũ */
+    public String getNote() {
+        return description;
+    }
+
+    public String getDate() {
+        return date;
+    }
+
+    public int getWalletId() {
+        return walletId;
+    }
+
+    public String getWalletName() {
+        return walletName;
+    }
 }

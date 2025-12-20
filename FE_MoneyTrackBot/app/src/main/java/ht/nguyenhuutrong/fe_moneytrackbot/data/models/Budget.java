@@ -2,14 +2,21 @@ package ht.nguyenhuutrong.fe_moneytrackbot.data.models;
 
 import com.google.gson.annotations.SerializedName;
 
+/**
+ * Budget
+ * --------------------------------------------------
+ * Model ngân sách theo danh mục và theo tháng/năm.
+ * Dùng cho cả request (tạo/cập nhật) và response từ API.
+ */
 public class Budget {
 
-    // --- (A) Dùng để NHẬN dữ liệu (Get) ---
+    // ===== Response fields =====
+
     @SerializedName("id")
     private int id;
 
     @SerializedName("amount")
-    private double amount; // Hạn mức
+    private double amount;
 
     @SerializedName("month")
     private int month;
@@ -17,26 +24,45 @@ public class Budget {
     @SerializedName("year")
     private int year;
 
-    // Đây là đối tượng Category lồng bên trong
+    /**
+     * Thông tin chi tiết danh mục (object lồng).
+     * Chỉ xuất hiện trong response.
+     */
     @SerializedName("category_details")
     private Category categoryDetails;
 
-    // --- (B) Dùng để GỬI dữ liệu (Create/Post) ---
-    // API của bạn cần một trường "category" (là ID) khi tạo mới
+    // ===== Request fields =====
+
+    /**
+     * ID danh mục dùng khi tạo/cập nhật ngân sách.
+     * Không xuất hiện trong response.
+     */
     @SerializedName("category")
     private int category;
-    // (Lưu ý: Gson sẽ bỏ qua trường này nếu nó không có trong JSON trả về,
-    // và chỉ gửi nó đi khi chúng ta gọi hàm setCategory)
 
-    // --- (C) Getters (Giữ nguyên) ---
-    public int getId() { return id; }
-    public double getAmount() { return amount; }
-    public int getMonth() { return month; }
-    public int getYear() { return year; }
-    public Category getCategoryDetails() { return categoryDetails; }
+    // ===== Getters =====
 
-    // --- (D) Setters (BẮT BUỘC PHẢI THÊM VÀO) ---
-    // Đây là các hàm mà BudgetActivity đang gọi
+    public int getId() {
+        return id;
+    }
+
+    public double getAmount() {
+        return amount;
+    }
+
+    public int getMonth() {
+        return month;
+    }
+
+    public int getYear() {
+        return year;
+    }
+
+    public Category getCategoryDetails() {
+        return categoryDetails;
+    }
+
+    // ===== Setters =====
 
     public void setAmount(double amount) {
         this.amount = amount;
@@ -51,8 +77,7 @@ public class Budget {
     }
 
     /**
-     * Dùng để gán ID của Category khi TẠO MỚI một Budget
-     * @param categoryId ID của danh mục
+     * Gán ID danh mục khi tạo hoặc cập nhật Budget.
      */
     public void setCategory(int categoryId) {
         this.category = categoryId;

@@ -1,16 +1,40 @@
 package ht.nguyenhuutrong.fe_moneytrackbot.data.models;
 
-public class ChatMessage {
-    private String message;
-    private boolean isSentByMe; // true = Người dùng gửi, false = Bot gửi
-    private String timestamp;   // (Tùy chọn) Lưu thời gian: "10:30"
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
-    // Constructor đơn giản
+/**
+ * ChatMessage
+ * --------------------------------------------------
+ * Đại diện cho một tin nhắn trong cuộc trò chuyện
+ * giữa người dùng và chatbot.
+ */
+public class ChatMessage {
+
+    private String message;
+
+    /**
+     * true  → tin nhắn do người dùng gửi
+     * false → tin nhắn do chatbot gửi
+     */
+    private boolean isSentByMe;
+
+    /**
+     * Thời gian gửi tin nhắn (HH:mm)
+     */
+    private String timestamp;
+
+    /**
+     * Khởi tạo tin nhắn mới với thời gian hiện tại.
+     */
     public ChatMessage(String message, boolean isSentByMe) {
         this.message = message;
         this.isSentByMe = isSentByMe;
-        this.timestamp = getCurrentTime(); // Bạn có thể viết hàm lấy giờ hiện tại
+        this.timestamp = getCurrentTime();
     }
+
+    // ===== Getters & Setters =====
 
     public String getMessage() {
         return message;
@@ -32,9 +56,10 @@ public class ChatMessage {
         return timestamp;
     }
 
-    // Hàm lấy giờ hiện tại đơn giản (Ví dụ)
+    // ===== Helpers =====
+
     private String getCurrentTime() {
-        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault());
-        return sdf.format(new java.util.Date());
+        return new SimpleDateFormat("HH:mm", Locale.getDefault())
+                .format(new Date());
     }
 }

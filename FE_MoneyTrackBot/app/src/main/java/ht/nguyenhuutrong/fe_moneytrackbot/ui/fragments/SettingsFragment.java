@@ -29,41 +29,71 @@ public class SettingsFragment extends Fragment {
 
     @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        // Ánh xạ layout fragment_settings mới
+    public View onCreateView(
+            @NonNull LayoutInflater inflater,
+            @Nullable ViewGroup container,
+            @Nullable Bundle savedInstanceState
+    ) {
         rootView = inflater.inflate(R.layout.fragment_settings, container, false);
-
         viewModel = new ViewModelProvider(this).get(SettingsViewModel.class);
 
         setupUI();
-        setupObservers();
+        bindViewModel();
 
         return rootView;
     }
 
-    private void setupObservers() {
+    /**
+     * Lắng nghe các sự kiện từ ViewModel
+     */
+    private void bindViewModel() {
         viewModel.getLogoutEvent().observe(getViewLifecycleOwner(), isLoggedOut -> {
-            if (isLoggedOut != null && isLoggedOut) {
+            if (Boolean.TRUE.equals(isLoggedOut)) {
                 navigateToLogin();
             }
         });
     }
 
+    /**
+     * Khởi tạo & gán sự kiện cho UI
+     */
     private void setupUI() {
-        // 1. Nút chuyển đổi Theme (ID mới: btnThemeToggle)
+
+        // Toggle Theme (đang phát triển)
         MaterialCardView btnThemeToggle = rootView.findViewById(R.id.btnThemeToggle);
         if (btnThemeToggle != null) {
             btnThemeToggle.setOnClickListener(v ->
-                    Toast.makeText(getContext(), "Chế độ sáng/tối đang được phát triển", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                            getContext(),
+                            "Chế độ sáng/tối đang được phát triển",
+                            Toast.LENGTH_SHORT
+                    ).show()
             );
         }
 
-        // 2. Các mục cài đặt Double (Có Title và Subtitle)
-        setupDoubleItem(R.id.itemWallet, "Ví và Danh mục", "Quản lý nguồn tiền và phân loại", R.drawable.ic_wallet);
-        setupDoubleItem(R.id.itemAccount, "Tài khoản", "Thông tin cá nhân và bảo mật", R.drawable.ic_settings);
+        // Các item dạng Double (Title + Subtitle)
+        setupDoubleItem(
+                R.id.itemWallet,
+                "Ví và Danh mục",
+                "Quản lý nguồn tiền và phân loại",
+                R.drawable.ic_wallet
+        );
 
-        // 3. Các mục cài đặt Single (Chỉ có Title)
-        setupSingleItem(R.id.itemPremium, "Đăng xuất", R.drawable.ic_add, v -> showLogoutDialog());
+        setupDoubleItem(
+                R.id.itemAccount,
+                "Tài khoản",
+                "Thông tin cá nhân và bảo mật",
+                R.drawable.ic_settings
+        );
+
+        // Các item dạng Single
+        setupSingleItem(
+                R.id.itemPremium,
+                "Đăng xuất",
+                R.drawable.ic_add,
+                v -> showLogoutDialog()
+        );
+
         setupSingleItem(R.id.itemFeature, "Tính năng mới", R.drawable.ic_add, null);
         setupSingleItem(R.id.itemContact, "Liên hệ hỗ trợ", R.drawable.ic_add, null);
         setupSingleItem(R.id.itemTerms, "Điều khoản sử dụng", R.drawable.ic_settings, null);
@@ -71,9 +101,14 @@ public class SettingsFragment extends Fragment {
     }
 
     /**
-     * Hỗ trợ thiết lập các item dùng layout item_setting_card_double
+     * Thiết lập item cài đặt dạng Double (Title + Subtitle)
      */
-    private void setupDoubleItem(int id, String title, String subtitle, int iconRes) {
+    private void setupDoubleItem(
+            int id,
+            String title,
+            String subtitle,
+            int iconRes
+    ) {
         View item = rootView.findViewById(id);
         if (item == null) return;
 
@@ -85,13 +120,20 @@ public class SettingsFragment extends Fragment {
         if (tvSubtitle != null) tvSubtitle.setText(subtitle);
         if (imgIcon != null) imgIcon.setImageResource(iconRes);
 
-        item.setOnClickListener(v -> Toast.makeText(getContext(), title, Toast.LENGTH_SHORT).show());
+        item.setOnClickListener(v ->
+                Toast.makeText(getContext(), title, Toast.LENGTH_SHORT).show()
+        );
     }
 
     /**
-     * Hỗ trợ thiết lập các item dùng layout item_setting_card_single
+     * Thiết lập item cài đặt dạng Single (chỉ Title)
      */
-    private void setupSingleItem(int id, String title, int iconRes, View.OnClickListener customListener) {
+    private void setupSingleItem(
+            int id,
+            String title,
+            int iconRes,
+            View.OnClickListener customListener
+    ) {
         View item = rootView.findViewById(id);
         if (item == null) return;
 
@@ -99,30 +141,45 @@ public class SettingsFragment extends Fragment {
         ImageView imgIcon = item.findViewById(R.id.icon);
 
         if (tvTitle != null) tvTitle.setText(title);
+
         if (imgIcon != null) {
             imgIcon.setImageResource(iconRes);
-            // Highlight màu đặc biệt cho nút Đăng xuất
-            if (title.equals("Đăng xuất")) {
-                imgIcon.setColorFilter(Color.parseColor("#FFB74D")); // Màu cam theo theme
+
+            // Highlight riêng cho nút Đăng xuất
+            if ("Đăng xuất".equals(title)) {
+                imgIcon.setColorFilter(Color.parseColor("#FFB74D"));
             }
         }
 
-        if (customListener != null) {
-            item.setOnClickListener(customListener);
-        } else {
-            item.setOnClickListener(v -> Toast.makeText(getContext(), title, Toast.LENGTH_SHORT).show());
-        }
+        item.setOnClickListener(
+                customListener != null
+                        ? customListener
+                        : v -> Toast.makeText(getContext(), title, Toast.LENGTH_SHORT).show()
+        );
     }
 
+    /**
+     * Hiển thị dialog xác nhận đăng xuất
+     */
     private void showLogoutDialog() {
         if (getContext() == null) return;
-        SettingsDialog.showLogoutConfirmation(getContext(), () -> viewModel.logout());
+        SettingsDialog.showLogoutConfirmation(
+                getContext(),
+                () -> viewModel.logout()
+        );
     }
 
+    /**
+     * Điều hướng về màn hình Login và clear back stack
+     */
     private void navigateToLogin() {
         if (getContext() == null) return;
+
         Intent intent = new Intent(getContext(), LoginActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        intent.setFlags(
+                Intent.FLAG_ACTIVITY_NEW_TASK |
+                        Intent.FLAG_ACTIVITY_CLEAR_TASK
+        );
         startActivity(intent);
     }
 }

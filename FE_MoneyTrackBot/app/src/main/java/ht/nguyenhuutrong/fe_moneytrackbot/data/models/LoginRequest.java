@@ -2,6 +2,11 @@ package ht.nguyenhuutrong.fe_moneytrackbot.data.models;
 
 import com.google.gson.annotations.SerializedName;
 
+/**
+ * LoginRequest
+ * --------------------------------------------------
+ * Request model dùng để đăng nhập người dùng.
+ */
 public class LoginRequest {
 
     @SerializedName("username")
@@ -10,12 +15,16 @@ public class LoginRequest {
     @SerializedName("password")
     private String password;
 
+    /**
+     * Khởi tạo request đăng nhập.
+     */
     public LoginRequest(String username, String password) {
         this.username = username;
         this.password = password;
     }
 
-    // ✅ Bổ sung getter & setter để Retrofit (Gson) có thể ánh xạ đúng
+    // ===== Getters & Setters =====
+
     public String getUsername() {
         return username;
     }

@@ -1,8 +1,10 @@
 package ht.nguyenhuutrong.fe_moneytrackbot.data.models;
 
 /**
- * Model này đại diện cho đối tượng User
- * mà server trả về sau khi đăng ký thành công.
+ * User
+ * ----------------------------------------
+ * Model người dùng trả về từ server
+ * (sau khi đăng ký hoặc lấy thông tin tài khoản).
  */
 public class User {
 
@@ -10,7 +12,7 @@ public class User {
     private String username;
     private String email;
 
-    // --- Getters ---
+    // ===== Getters =====
 
     public int getId() {
         return id;
@@ -24,7 +26,7 @@ public class User {
         return email;
     }
 
-    // --- Setters (Không bắt buộc nhưng nên có) ---
+    // ===== Setters =====
 
     public void setId(int id) {
         this.id = id;

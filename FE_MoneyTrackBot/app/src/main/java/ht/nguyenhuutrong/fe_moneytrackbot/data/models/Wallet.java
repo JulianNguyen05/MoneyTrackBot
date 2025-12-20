@@ -3,6 +3,12 @@ package ht.nguyenhuutrong.fe_moneytrackbot.data.models;
 import com.google.gson.annotations.SerializedName;
 import java.io.Serializable;
 
+/**
+ * Wallet
+ * ----------------------------------------
+ * Model ví tiền dùng để hiển thị và thao tác
+ * (nhận từ server hoặc tạo mới).
+ */
 public class Wallet implements Serializable {
 
     @SerializedName("id")
@@ -14,36 +20,57 @@ public class Wallet implements Serializable {
     @SerializedName("balance")
     private double balance;
 
-    // --- Constructor 1: Mặc định ---
+    // Constructor rỗng (bắt buộc cho Gson)
     public Wallet() {
     }
 
-    // --- Constructor 2: Tạo mới ---
+    // Dùng khi tạo mới ví
     public Wallet(String name, double balance) {
         this.name = name;
         this.balance = balance;
     }
 
-    // --- Constructor 3: Đầy đủ ---
+    // Dùng khi nhận dữ liệu đầy đủ từ server
     public Wallet(int id, String name, double balance) {
         this.id = id;
         this.name = name;
         this.balance = balance;
     }
 
-    // --- Getters ---
-    public int getId() { return id; }
-    public String getName() { return name; }
-    public double getBalance() { return balance; }
+    // ===== Getters =====
 
-    // --- Setters ---
-    public void setId(int id) { this.id = id; }
-    public void setName(String name) { this.name = name; }
-    public void setBalance(double balance) { this.balance = balance; }
+    public int getId() {
+        return id;
+    }
 
-    // 🔥 QUAN TRỌNG: Hàm này giúp Dropdown hiển thị Tên Ví thay vì mã Hash
+    public String getName() {
+        return name;
+    }
+
+    public double getBalance() {
+        return balance;
+    }
+
+    // ===== Setters =====
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setBalance(double balance) {
+        this.balance = balance;
+    }
+
+    /**
+     * Quan trọng:
+     * Giúp Spinner / Dropdown hiển thị tên ví.
+     */
     @Override
     public String toString() {
-        return name; // Trả về tên để hiển thị lên menu
+        return name;
     }
 }

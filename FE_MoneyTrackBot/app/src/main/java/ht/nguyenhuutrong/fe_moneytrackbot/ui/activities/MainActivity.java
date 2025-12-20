@@ -26,31 +26,54 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // 1. Init ViewModel & check login
+        // Khởi tạo ViewModel và kiểm tra trạng thái đăng nhập
         viewModel = new ViewModelProvider(this).get(MainViewModel.class);
-
         if (!viewModel.isUserLoggedIn()) {
             navigateToLogin();
             return;
         }
 
-        // 2. Init Views
-        bottomNavigationView = findViewById(R.id.bottom_navigation);
+        setupBottomNavigation();
 
-        // 3. Handle bottom navigation trực tiếp
+        // Load Home Fragment mặc định lần đầu tiên mở app
+        if (savedInstanceState == null) {
+            loadFragment(new HomeFragment());
+            bottomNavigationView.setSelectedItemId(R.id.nav_home);
+        }
+
+        // Xử lý điều hướng nếu có Intent gửi đến (Ví dụ: từ Chatbot quay về)
+        handleNavigationIntent(getIntent());
+    }
+
+    /**
+     * Hỗ trợ chế độ SingleTop (launchMode):
+     * Khi Activity đã tồn tại trong stack và được gọi lại, onCreate sẽ không chạy,
+     * thay vào đó hệ thống gọi onNewIntent.
+     */
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent); // Cập nhật Intent mới nhất cho Activity
+        handleNavigationIntent(intent);
+    }
+
+    private void setupBottomNavigation() {
+        bottomNavigationView = findViewById(R.id.bottom_navigation);
         bottomNavigationView.setOnItemSelectedListener(item -> {
             int itemId = item.getItemId();
-            Fragment selectedFragment = null;
 
+            // Đặc biệt: Mở Chatbot Activity (Không phải Fragment)
+            if (itemId == R.id.nav_chatbot) {
+                Intent intent = new Intent(this, ChatBotActivity.class);
+                startActivity(intent);
+                return false; // Trả về false để icon Chatbot không bị highlight (giữ trạng thái tab cũ)
+            }
+
+            Fragment selectedFragment = null;
             if (itemId == R.id.nav_home) {
                 selectedFragment = new HomeFragment();
             } else if (itemId == R.id.nav_transactions) {
                 selectedFragment = new TransactionsFragment();
-            } else if (itemId == R.id.nav_chatbot) {
-                // Mở Activity ChatBot - Không dùng Fragment
-                Intent intent = new Intent(this, ChatBotActivity.class);
-                startActivity(intent);
-                return false; // Trả về false để không highlight tab Chatbot
             } else if (itemId == R.id.nav_settings) {
                 selectedFragment = new SettingsFragment();
             }
@@ -61,35 +84,19 @@ public class MainActivity extends AppCompatActivity {
             }
             return false;
         });
-
-        // 4. Load Home mặc định (Chỉ khi chưa có trạng thái lưu)
-        if (savedInstanceState == null) {
-            loadFragment(new HomeFragment());
-            bottomNavigationView.setSelectedItemId(R.id.nav_home);
-        }
-
-        // 🔥 5. QUAN TRỌNG: Kiểm tra xem có yêu cầu chuyển Tab từ ChatBot không
-        handleNavigationIntent(getIntent());
     }
 
-    // 🔥 6. Hỗ trợ SingleTop: Khi Activity đã mở sẵn mà được gọi lại
-    @Override
-    protected void onNewIntent(Intent intent) {
-        super.onNewIntent(intent);
-        setIntent(intent); // Cập nhật intent mới nhất
-        handleNavigationIntent(intent);
-    }
-
-    // 🔥 7. Hàm xử lý logic chuyển tab
+    /**
+     * Kiểm tra Intent để tự động chuyển Tab.
+     * Được dùng khi ChatBotActivity finish() và yêu cầu quay về màn hình Giao dịch.
+     */
     private void handleNavigationIntent(Intent intent) {
         if (intent != null && "TRANSACTIONS".equals(intent.getStringExtra("NAVIGATE_TO"))) {
-            // Tự động click vào tab Giao dịch
-            // Việc này sẽ kích hoạt listener ở trên và load TransactionsFragment
+            // Tự động chọn tab Giao dịch -> Kích hoạt listener -> Load TransactionsFragment
             bottomNavigationView.setSelectedItemId(R.id.nav_transactions);
         }
     }
 
-    // Hàm load Fragment thay thế cho logic trong Helper
     private void loadFragment(Fragment fragment) {
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.fragment_container, fragment)

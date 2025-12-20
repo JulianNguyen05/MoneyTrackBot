@@ -14,9 +14,9 @@ import ht.nguyenhuutrong.fe_moneytrackbot.ui.viewmodels.RegisterViewModel;
 
 public class RegisterActivity extends AppCompatActivity {
 
-    private EditText editTextUsername, editTextEmail, editTextPassword;
-    private Button buttonRegister;
-    private TextView textViewBackToLogin;
+    private EditText etUsername, etEmail, etPassword;
+    private Button btnRegister;
+    private TextView tvBackToLogin;
     private RegisterViewModel viewModel;
 
     @Override
@@ -24,54 +24,73 @@ public class RegisterActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
 
-        // 1. Init ViewModel
-        viewModel = new ViewModelProvider(this).get(RegisterViewModel.class);
-
-        // 2. Init Views
-        editTextUsername = findViewById(R.id.editTextUsernameRegister);
-        editTextEmail = findViewById(R.id.editTextEmailRegister);
-        editTextPassword = findViewById(R.id.editTextPasswordRegister);
-        buttonRegister = findViewById(R.id.buttonRegister);
-
-        textViewBackToLogin = findViewById(R.id.textViewBackToLogin);
-
-        // 3. Setup Observers (Lắng nghe kết quả)
+        initViewModel();
+        initViews();
         setupObservers();
-
-        // 4. Handle Click
-        buttonRegister.setOnClickListener(v -> {
-            String user = editTextUsername.getText().toString().trim();
-            String email = editTextEmail.getText().toString().trim();
-            String pass = editTextPassword.getText().toString().trim();
-
-            viewModel.register(user, email, pass);
-        });
-
-        textViewBackToLogin.setOnClickListener(v -> {
-            finish();
-        });
+        setupActions();
     }
 
+    /**
+     * Khởi tạo ViewModel
+     */
+    private void initViewModel() {
+        viewModel = new ViewModelProvider(this).get(RegisterViewModel.class);
+    }
+
+    /**
+     * Ánh xạ View
+     */
+    private void initViews() {
+        etUsername = findViewById(R.id.editTextUsernameRegister);
+        etEmail = findViewById(R.id.editTextEmailRegister);
+        etPassword = findViewById(R.id.editTextPasswordRegister);
+        btnRegister = findViewById(R.id.buttonRegister);
+        tvBackToLogin = findViewById(R.id.textViewBackToLogin);
+    }
+
+    /**
+     * Gán sự kiện click
+     */
+    private void setupActions() {
+        btnRegister.setOnClickListener(v -> register());
+        tvBackToLogin.setOnClickListener(v -> finish());
+    }
+
+    /**
+     * Lắng nghe trạng thái từ ViewModel
+     */
     private void setupObservers() {
-        // Thành công -> Báo Toast & Quay về
         viewModel.getRegisterSuccess().observe(this, success -> {
             if (success) {
-                Toast.makeText(this, "Đăng ký thành công! Vui lòng đăng nhập.", Toast.LENGTH_LONG).show();
+                Toast.makeText(
+                        this,
+                        "Đăng ký thành công! Vui lòng đăng nhập.",
+                        Toast.LENGTH_LONG
+                ).show();
                 finish();
             }
         });
 
-        // Thất bại -> Báo lỗi
         viewModel.getErrorMessage().observe(this, message -> {
             if (message != null) {
                 Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
             }
         });
 
-        // Loading -> Disable nút bấm
         viewModel.getIsLoading().observe(this, isLoading -> {
-            buttonRegister.setEnabled(!isLoading);
-            buttonRegister.setText(isLoading ? "Đang xử lý..." : "Đăng ký");
+            btnRegister.setEnabled(!isLoading);
+            btnRegister.setText(isLoading ? "Đang xử lý..." : "Đăng ký");
         });
+    }
+
+    /**
+     * Thực hiện đăng ký
+     */
+    private void register() {
+        String username = etUsername.getText().toString().trim();
+        String email = etEmail.getText().toString().trim();
+        String password = etPassword.getText().toString().trim();
+
+        viewModel.register(username, email, password);
     }
 }

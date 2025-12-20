@@ -3,6 +3,11 @@ package ht.nguyenhuutrong.fe_moneytrackbot.data.models;
 import com.google.gson.annotations.SerializedName;
 import java.io.Serializable;
 
+/**
+ * Category
+ * --------------------------------------------------
+ * Đại diện cho danh mục thu hoặc chi trong hệ thống.
+ */
 public class Category implements Serializable {
 
     @SerializedName("id")
@@ -11,37 +16,67 @@ public class Category implements Serializable {
     @SerializedName("name")
     private String name;
 
+    /**
+     * Loại danh mục: "income" hoặc "expense"
+     */
     @SerializedName("type")
-    private String type; // "income" hoặc "expense"
+    private String type;
 
-    // --- 1. Constructor Rỗng (Bắt buộc để Gson map dữ liệu không bị lỗi) ---
+    /**
+     * Constructor rỗng.
+     * Cần thiết cho Gson khi mapping dữ liệu từ JSON.
+     */
     public Category() {
     }
 
-    // --- 2. Constructor dùng để Gửi lên Server (Tạo mới - Không cần ID) ---
+    /**
+     * Constructor dùng khi tạo mới danh mục.
+     */
     public Category(String name, String type) {
         this.name = name;
         this.type = type;
     }
 
-    // --- 3. Constructor đầy đủ (Khi nhận từ Server về - Có ID) ---
+    /**
+     * Constructor đầy đủ (dùng khi nhận dữ liệu từ server).
+     */
     public Category(int id, String name, String type) {
         this.id = id;
         this.name = name;
         this.type = type;
     }
 
-    // --- Getters ---
-    public int getId() { return id; }
-    public String getName() { return name; }
-    public String getType() { return type; }
+    // ===== Getters =====
 
-    // --- Setters (Nên có) ---
-    public void setId(int id) { this.id = id; }
-    public void setName(String name) { this.name = name; }
-    public void setType(String type) { this.type = type; }
+    public int getId() {
+        return id;
+    }
 
-    // 🔥 QUAN TRỌNG: Để hiển thị tên lên Dropdown Menu
+    public String getName() {
+        return name;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    // ===== Setters =====
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    /**
+     * Trả về tên danh mục để hiển thị trong Spinner / Dropdown.
+     */
     @Override
     public String toString() {
         return name;

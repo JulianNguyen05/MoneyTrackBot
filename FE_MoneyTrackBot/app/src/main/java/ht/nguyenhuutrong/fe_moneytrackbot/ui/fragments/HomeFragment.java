@@ -23,12 +23,12 @@ import java.util.Date;
 import java.util.Locale;
 
 import ht.nguyenhuutrong.fe_moneytrackbot.R;
-import ht.nguyenhuutrong.fe_moneytrackbot.ui.dialogs.CategoryDialog; // 🔥 Import mới
 import ht.nguyenhuutrong.fe_moneytrackbot.data.models.CashFlowResponse;
-import ht.nguyenhuutrong.fe_moneytrackbot.data.models.Category;      // 🔥 Import mới
+import ht.nguyenhuutrong.fe_moneytrackbot.data.models.Category;
 import ht.nguyenhuutrong.fe_moneytrackbot.data.models.Wallet;
 import ht.nguyenhuutrong.fe_moneytrackbot.data.renderers.HomeUIManager;
 import ht.nguyenhuutrong.fe_moneytrackbot.data.renderers.WalletRenderer;
+import ht.nguyenhuutrong.fe_moneytrackbot.ui.dialogs.CategoryDialog;
 import ht.nguyenhuutrong.fe_moneytrackbot.ui.viewmodels.HomeViewModel;
 
 public class HomeFragment extends Fragment {
@@ -36,12 +36,14 @@ public class HomeFragment extends Fragment {
     private HomeViewModel viewModel;
     private HomeUIManager uiManager;
 
+    // UI
     private TextView tvNetChange;
     private TextView tvExpenseValue;
     private TextView tvIncomeValue;
     private TextView tvSelectedDate;
     private View cardDateRangePicker;
 
+    // Định dạng tiền tệ VNĐ
     private final NumberFormat currencyFormat =
             NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
 
@@ -58,15 +60,19 @@ public class HomeFragment extends Fragment {
         uiManager = new HomeUIManager(getContext(), view, getParentFragmentManager());
 
         initViews(view);
-        setupBindings();
+        bindViewModel();
 
+        // Load dữ liệu ban đầu
         viewModel.loadWallets();
         viewModel.loadCategories();
-        loadCurrentMonthData(); // Load dữ liệu mặc định
+        loadCurrentMonthData();
 
         return view;
     }
 
+    /**
+     * Ánh xạ View & xử lý sự kiện UI cơ bản
+     */
     private void initViews(View view) {
         tvNetChange = view.findViewById(R.id.tv_net_change);
         tvExpenseValue = view.findViewById(R.id.tv_expense_value);
@@ -74,12 +80,15 @@ public class HomeFragment extends Fragment {
         tvSelectedDate = view.findViewById(R.id.tvSelectedDate);
         cardDateRangePicker = view.findViewById(R.id.cardDateRangePicker);
 
-        // Click vào ngày -> Gọi hàm showDateRangePicker của Fragment
         cardDateRangePicker.setOnClickListener(v -> showDateRangePicker());
     }
 
-    private void setupBindings() {
-        // 1. Bind WALLET (Thêm, Sửa, Xóa)
+    /**
+     * Kết nối ViewModel → UI
+     */
+    private void bindViewModel() {
+
+        // Wallet: Thêm / Sửa / Xóa
         viewModel.getWallets().observe(getViewLifecycleOwner(), wallets ->
                 uiManager.updateWallets(wallets, new WalletRenderer.WalletActionListener() {
                     @Override
@@ -99,37 +108,34 @@ public class HomeFragment extends Fragment {
                 })
         );
 
-        // 2. Bind CATEGORY (🔥 CẬP NHẬT: Triển khai đủ 3 phương thức Thêm/Sửa/Xóa)
+        // Category: Thêm / Sửa / Xóa
         viewModel.getCategories().observe(getViewLifecycleOwner(), categories ->
-                uiManager.updateCategories(
-                        categories,
-                        new CategoryDialog.OnCategoryActionListener() {
-                            @Override
-                            public void onCreate(String name, String type) {
-                                viewModel.createCategory(name, type);
-                            }
+                uiManager.updateCategories(categories, new CategoryDialog.OnCategoryActionListener() {
+                    @Override
+                    public void onCreate(String name, String type) {
+                        viewModel.createCategory(name, type);
+                    }
 
-                            @Override
-                            public void onUpdate(Category category) {
-                                viewModel.updateCategory(category);
-                            }
+                    @Override
+                    public void onUpdate(Category category) {
+                        viewModel.updateCategory(category);
+                    }
 
-                            @Override
-                            public void onDelete(int id) {
-                                viewModel.deleteCategory(id);
-                            }
-                        }
-                )
+                    @Override
+                    public void onDelete(int id) {
+                        viewModel.deleteCategory(id);
+                    }
+                })
         );
 
-        // 3. Bind Error Message
+        // Hiển thị lỗi từ ViewModel
         viewModel.getErrorMessage().observe(getViewLifecycleOwner(), msg -> {
             if (msg != null && getContext() != null) {
                 Toast.makeText(getContext(), msg, Toast.LENGTH_SHORT).show();
             }
         });
 
-        // 4. Bind CashFlow Data
+        // Dữ liệu Thu – Chi
         if (viewModel.cashFlowData != null) {
             viewModel.cashFlowData.observe(
                     getViewLifecycleOwner(),
@@ -138,86 +144,93 @@ public class HomeFragment extends Fragment {
         }
     }
 
-    // 🔥 CẬP NHẬT LOGIC TÍNH TOÁN VÀ HIỂN THỊ NET CHANGE
+    /**
+     * Cập nhật UI Thu – Chi – Số dư
+     */
     private void updateCashFlowUI(CashFlowResponse data) {
         if (data == null) return;
 
-        // 1. Lấy giá trị tuyệt đối (để đảm bảo tính toán đúng dù DB lưu âm hay dương)
-        double realIncome = Math.abs(data.getTotalIncome());
-        double realExpense = Math.abs(data.getTotalExpense());
+        double income = Math.abs(data.getTotalIncome());
+        double expense = Math.abs(data.getTotalExpense());
+        double net = income - expense;
 
-        // --- HIỂN THỊ THU NHẬP (Màu Xanh, Dấu +) ---
-        tvIncomeValue.setText("+" + currencyFormat.format(realIncome));
-        tvIncomeValue.setTextColor(ContextCompat.getColor(requireContext(), R.color.normal_weight));
+        // Thu nhập
+        tvIncomeValue.setText("+" + currencyFormat.format(income));
+        tvIncomeValue.setTextColor(
+                ContextCompat.getColor(requireContext(), R.color.normal_weight)
+        );
 
-        // --- HIỂN THỊ CHI TIÊU (Màu Đỏ, Dấu -) ---
-        tvExpenseValue.setText("-" + currencyFormat.format(realExpense));
-        tvExpenseValue.setTextColor(ContextCompat.getColor(requireContext(), R.color.obese));
+        // Chi tiêu
+        tvExpenseValue.setText("-" + currencyFormat.format(expense));
+        tvExpenseValue.setTextColor(
+                ContextCompat.getColor(requireContext(), R.color.obese)
+        );
 
-        // --- 2. TỰ TÍNH TOÁN NET CHANGE (THU - CHI) ---
-        // Lấy Thu trừ đi Chi để ra số thực tế
-        double netResult = realIncome - realExpense;
-
-        // Format lấy trị tuyệt đối của kết quả để ghép chuỗi
-        String netString = currencyFormat.format(Math.abs(netResult));
-
-        if (netResult < 0) {
-            // === ÂM (Chi nhiều hơn Thu) -> MÀU ĐỎ, DẤU TRỪ ===
-            tvNetChange.setText("-" + netString);
-            tvNetChange.setTextColor(ContextCompat.getColor(requireContext(), R.color.obese));
-        } else {
-            // === DƯƠNG (Thu nhiều hơn Chi) -> MÀU XANH, DẤU CỘNG ===
-            tvNetChange.setText("+" + netString);
-            tvNetChange.setTextColor(ContextCompat.getColor(requireContext(), R.color.normal_weight));
-        }
+        // Số dư (Net Change)
+        String netText = currencyFormat.format(Math.abs(net));
+        tvNetChange.setText((net < 0 ? "-" : "+") + netText);
+        tvNetChange.setTextColor(
+                ContextCompat.getColor(
+                        requireContext(),
+                        net < 0 ? R.color.obese : R.color.normal_weight
+                )
+        );
     }
 
+    /**
+     * Load dữ liệu của tháng hiện tại
+     */
     private void loadCurrentMonthData() {
         Calendar calendar = Calendar.getInstance();
 
-        SimpleDateFormat apiFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
-        SimpleDateFormat displayFormat = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+        SimpleDateFormat apiFormat =
+                new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+        SimpleDateFormat displayFormat =
+                new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
 
-        // Ngày đầu tháng
         calendar.set(Calendar.DAY_OF_MONTH, 1);
         String startApi = apiFormat.format(calendar.getTime());
         String startDisplay = displayFormat.format(calendar.getTime());
 
-        // Ngày cuối tháng
-        calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
+        calendar.set(Calendar.DAY_OF_MONTH,
+                calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
         String endApi = apiFormat.format(calendar.getTime());
         String endDisplay = displayFormat.format(calendar.getTime());
 
-        tvSelectedDate.setText(String.format("%s - %s", startDisplay, endDisplay));
+        tvSelectedDate.setText(startDisplay + " - " + endDisplay);
         viewModel.loadCashFlow(startApi, endApi);
     }
 
-    // --- DIALOG CHỌN NGÀY ---
+    /**
+     * Dialog chọn khoảng thời gian
+     */
     private void showDateRangePicker() {
-        MaterialDatePicker.Builder<Pair<Long, Long>> builder =
-                MaterialDatePicker.Builder.dateRangePicker();
-
-        builder.setTitleText("Chọn khoảng thời gian");
-        builder.setTheme(R.style.CustomDatePickerTheme); // Theme màu nền F5F5F5
-
-        MaterialDatePicker<Pair<Long, Long>> picker = builder.build();
+        MaterialDatePicker<Pair<Long, Long>> picker =
+                MaterialDatePicker.Builder.dateRangePicker()
+                        .setTitleText("Chọn khoảng thời gian")
+                        .setTheme(R.style.CustomDatePickerTheme)
+                        .build();
 
         picker.addOnPositiveButtonClickListener(selection -> {
-            if (selection.first != null && selection.second != null) {
-                SimpleDateFormat apiFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
-                SimpleDateFormat displayFormat = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+            if (selection.first == null || selection.second == null) return;
 
-                Date startDate = new Date(selection.first);
-                Date endDate = new Date(selection.second);
+            SimpleDateFormat apiFormat =
+                    new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+            SimpleDateFormat displayFormat =
+                    new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
 
-                String startApi = apiFormat.format(startDate);
-                String endApi = apiFormat.format(endDate);
-                String startDisplay = displayFormat.format(startDate);
-                String endDisplay = displayFormat.format(endDate);
+            Date startDate = new Date(selection.first);
+            Date endDate = new Date(selection.second);
 
-                tvSelectedDate.setText(String.format("%s - %s", startDisplay, endDisplay));
-                viewModel.loadCashFlow(startApi, endApi);
-            }
+            tvSelectedDate.setText(
+                    displayFormat.format(startDate) + " - " +
+                            displayFormat.format(endDate)
+            );
+
+            viewModel.loadCashFlow(
+                    apiFormat.format(startDate),
+                    apiFormat.format(endDate)
+            );
         });
 
         picker.show(getParentFragmentManager(), "DATE_PICKER");
