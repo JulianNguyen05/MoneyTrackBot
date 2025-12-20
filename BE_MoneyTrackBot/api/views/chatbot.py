@@ -4,251 +4,181 @@ from decimal import Decimal
 
 # Google Gemini AI
 import google.generativeai as genai
+from google.api_core import exceptions as google_exceptions
 
 # Django
 from django.conf import settings
 from django.db import transaction
 from django.db.models import Sum
-from django.utils import timezone
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import permissions, status
 
 # Models
-from ..models.wallet import Wallet
-from ..models.category import Category
-from ..models.transaction import Transaction
-
+from ..models import Wallet, Category, Transaction
 
 # ==========================================================
-# 🔑 CẤU HÌNH GEMINI API
+# 🔑 CẤU HÌNH GEMINI
 # ==========================================================
+model = None
 try:
     genai.configure(api_key=settings.GEMINI_API_KEY)
-    model = genai.GenerativeModel("models/gemini-2.5-flash")
-    print("✅ [Chatbot] Kết nối Google Gemini API thành công")
+
+    # Dò tìm model hỗ trợ
+    my_models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
+
+    # Ưu tiên Flash 1.5
+    priority_list = [
+        "gemini-1.5-flash", "gemini-1.5-flash-latest", "gemini-1.5-flash-001",
+        "gemini-flash-latest", "gemini-2.0-flash-exp", "gemini-pro"
+    ]
+
+    selected_model = None
+    for priority in priority_list:
+        for m in my_models:
+            if priority in m:
+                selected_model = m
+                break
+        if selected_model: break
+
+    if not selected_model and my_models: selected_model = my_models[0]
+
+    if selected_model:
+        print(f"✅ [Chatbot] Model: {selected_model}")
+        model = genai.GenerativeModel(selected_model)
+    else:
+        print("❌ [Chatbot] Không tìm thấy model.")
+
 except Exception as e:
-    print("❌ [Chatbot] Không thể kết nối Gemini API")
-    print(str(e))
-    model = None
+    print(f"❌ [Chatbot] Lỗi khởi tạo: {str(e)}")
 
 
-# ==========================================================
-# 💬 CHATBOT API
-# ==========================================================
 class ChatbotView(APIView):
-    """
-    API Chatbot xử lý ngôn ngữ tự nhiên:
-    - Tạo giao dịch
-    - Truy vấn chi tiêu
-    - Quản lý ví, danh mục
-    """
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
         user = request.user
         message = request.data.get("message", "").strip()
 
-        # ==================================================
-        # LOG: USER INPUT
-        # ==================================================
         print("\n" + "=" * 70)
         print(f"👤 USER ({user.username}): {message}")
         print("=" * 70)
 
-        if not message:
-            return Response(
-                {"reply": "Tin nhắn rỗng"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        if model is None:
-            return Response(
-                {"reply": "Bot AI chưa sẵn sàng. Vui lòng kiểm tra API Key."},
-                status=status.HTTP_503_SERVICE_UNAVAILABLE
-            )
+        if not message: return Response({"reply": "Tin nhắn rỗng"}, status=400)
+        if model is None: return Response({"reply": "Lỗi AI Server."}, status=503)
 
         try:
-            # ==================================================
-            # (1) LOAD USER CONTEXT
-            # ==================================================
-            wallets = list(
-                Wallet.objects.filter(user=user).values("id", "name")
-            )
-            categories = list(
-                Category.objects.filter(user=user).values("id", "name", "type")
-            )
+            # 1. Chuẩn bị dữ liệu
+            wallets_qs = Wallet.objects.filter(user=user).values("id", "name", "balance")
+            wallets = [{"id": w["id"], "name": w["name"], "balance": float(w["balance"])} for w in wallets_qs]
+            categories = list(Category.objects.filter(user=user).values("id", "name", "type"))
 
-            # ==================================================
-            # (2) BUILD PROMPT
-            # ==================================================
+            # 2. Tạo Prompt
             prompt = self.build_prompt(message, wallets, categories)
 
-            # ==================================================
-            # (3) CALL GEMINI
-            # ==================================================
+            # 3. Gọi AI
             generation_config = genai.types.GenerationConfig(
-                response_mime_type="application/json"
+                response_mime_type="application/json", temperature=0.2
             )
-            response = model.generate_content(
-                prompt,
-                generation_config=generation_config
-            )
+            response = model.generate_content(prompt, generation_config=generation_config)
 
-            # ==================================================
-            # LOG: AI RAW RESPONSE
-            # ==================================================
-            print("🤖 AI RAW RESPONSE (JSON)")
-            print("-" * 70)
-            print(response.text)
-            print("-" * 70)
+            print("🤖 AI RESPONSE (JSON)\n" + "-" * 70 + f"\n{response.text}\n" + "-" * 70)
 
-            # ==================================================
-            # (4) PARSE AI RESPONSE
-            # ==================================================
             ai_data = json.loads(response.text)
             action = ai_data.get("action")
-            reply_message = ai_data.get("reply", "Đã xử lý xong.")
+            reply_message = ai_data.get("reply", "Đã xử lý.")
 
-            print(f"⚙️ AI ACTION: {action}")
-
-            # ==================================================
-            # (A) CREATE TRANSACTION
-            # ==================================================
+            # 4. Xử lý Action
             if action == "create_transaction":
-                self.create_transaction_from_ai(user, ai_data.get("data"))
-                print(f"💬 BOT REPLY: {reply_message}")
-                return Response({"reply": reply_message})
+                msg = self.create_transaction_from_ai(user, ai_data.get("data"))
+                return Response({"reply": msg})
 
-            # ==================================================
-            # (B) VALIDATION ERROR
-            # ==================================================
-            if action == "error_validation":
-                print(f"⚠️ BOT REPLY: {reply_message}")
-                return Response(
-                    {"reply": reply_message},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-
-            # ==================================================
-            # (C) ANSWER QUESTION
-            # ==================================================
             if action == "answer_question":
-                final_reply = self.handle_answer_question(
-                    user=user,
-                    ai_data=ai_data,
-                    wallets=wallets,
-                    categories=categories
-                )
+                msg = self.handle_answer_question(user, ai_data)
+                return Response({"reply": msg})
 
-                print(f"💬 BOT REPLY: {final_reply}")
-                return Response({"reply": final_reply})
-
-            # ==================================================
-            # (D) MANAGE WALLET
-            # ==================================================
-            if action == "manage_wallet":
-                self.handle_manage_wallet(user, ai_data.get("data", {}))
-                print(f"💬 BOT REPLY: {reply_message}")
-                return Response({"reply": reply_message})
-
-            # ==================================================
-            # (E) MANAGE CATEGORY
-            # ==================================================
-            if action == "manage_category":
-                self.handle_manage_category(user, ai_data.get("data", {}))
-                print(f"💬 BOT REPLY: {reply_message}")
-                return Response({"reply": reply_message})
-
-            # ==================================================
-            # (F) NORMAL CHAT / FALLBACK
-            # ==================================================
-            print(f"💬 BOT REPLY: {reply_message}")
             return Response({"reply": reply_message})
 
+        except google_exceptions.ResourceExhausted:
+            return Response({"reply": "Bot quá tải (Hết lượt free). Thử lại sau 1 phút! ⏳"}, status=429)
         except Exception as e:
-            error_message = str(e)
+            print(f"❌ ERROR: {str(e)}")
+            return Response({"reply": "Lỗi xử lý hệ thống."}, status=500)
 
-            print("❌ CHATBOT ERROR")
-            print("-" * 70)
-            print(error_message)
-            print("-" * 70)
-
-            # ==================================================
-            # HANDLE GEMINI QUOTA ERROR
-            # ==================================================
-            if "429" in error_message or "Quota exceeded" in error_message:
-                return Response(
-                    {
-                        "reply": (
-                            "🤖 Bot đang tạm nghỉ do vượt giới hạn sử dụng AI miễn phí.\n"
-                            "⏳ Bạn vui lòng thử lại sau khoảng 1 phút nhé!"
-                        )
-                    },
-                    status=status.HTTP_429_TOO_MANY_REQUESTS
-                )
-
-            # ==================================================
-            # OTHER ERROR
-            # ==================================================
-            return Response(
-                {"reply": "Xin lỗi, hệ thống chatbot đang gặp sự cố."},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-    # ==================================================
-    # PROMPT BUILDER
-    # ==================================================
     def build_prompt(self, message, wallets, categories):
         today = datetime.date.today().strftime("%Y-%m-%d")
         return f"""
-            Bạn là MoneyTrack Bot – trợ lý tài chính thông minh.
-            Ngày: {today}. Ngôn ngữ: Tiếng Việt.
-        
-            Danh sách ví (wallets): {json.dumps(wallets)}
-            Danh sách danh mục (categories): {json.dumps(categories)}
-        
-            NHIỆM VỤ:
-            - Phân tích tin nhắn người dùng
-            - Chỉ trả về 1 JSON DUY NHẤT
-            - Không giải thích, không markdown
-        
-            CÁC HÀNH ĐỘNG HỢP LỆ:
-            1. create_transaction
-            2. answer_question
-            3. manage_wallet
-            4. manage_category
-            5. error_validation
-        
-            CÁC query_type CHO answer_question:
-            - total_expense_current_month
-            - total_expense_specific_month
-            - get_wallet_balance
-            - list_wallets        ← liệt kê ví
-            - list_categories     ← liệt kê danh mục
-        
-            Tin nhắn người dùng: "{message}"
-            """
+            Bạn là MoneyTrack Bot. Hôm nay: {today}.
+            Ví: {json.dumps(wallets)}
+            Danh mục: {json.dumps(categories)}
 
-    # ==================================================
-    # CREATE TRANSACTION
-    # ==================================================
+            NHIỆM VỤ: Trả về JSON chuẩn. 
+            Nếu người dùng muốn tạo giao dịch (thu/chi), hãy trích xuất:
+            - description: nội dung chi tiết (VD: "ăn bún bò", "đổ xăng").
+            - amount: số tiền (luôn là số dương).
+
+            Format JSON:
+            {{
+                "action": "create_transaction" | "answer_question" | "error_validation",
+                "query_type": "...",
+                "data": {{ 
+                    "wallet_id": int, 
+                    "category_id": int, 
+                    "amount": float, 
+                    "description": "string",
+                    "date": "YYYY-MM-DD"
+                }},
+                "reply": "Câu trả lời ngắn",
+                "answer": "Câu trả lời chi tiết"
+            }}
+            Tin nhắn: "{message}"
+        """
+
     def create_transaction_from_ai(self, user, data):
-        with transaction.atomic():
-            wallet = Wallet.objects.get(id=data["wallet_id"], user=user)
-            category = Category.objects.get(id=data["category_id"], user=user)
+        try:
+            with transaction.atomic():
+                wallet = Wallet.objects.get(id=data["wallet_id"], user=user)
+                category = Category.objects.get(id=data["category_id"], user=user)
 
-            raw_amount = Decimal(str(data["amount"]))
-            amount = -abs(raw_amount) if category.type == "expense" else abs(raw_amount)
+                # 1. Lấy mô tả (SỬA LỖI: Ưu tiên lấy description, nếu không có thì lấy note, ko có nữa mới lấy tên danh mục)
+                description = data.get("description") or data.get("note") or category.name
+                description = description.strip().capitalize()
 
-            Transaction.objects.create(
-                user=user,
-                wallet=wallet,
-                category=category,
-                amount=amount,
-                date=data.get("date", datetime.date.today()),
-                description=data.get("description", category.name).capitalize()
-            )
+                # 2. Xử lý tiền
+                raw_amount = Decimal(str(data["amount"]))
+                amount_val = abs(raw_amount)  # DB luôn lưu dương
 
-            wallet.balance += amount
-            wallet.save(update_fields=["balance"])
+                # 3. Tạo Transaction
+                new_t = Transaction.objects.create(
+                    user=user,
+                    wallet=wallet,
+                    category=category,
+                    amount=amount_val,
+                    date=data.get("date", datetime.date.today()),
+                    description=description  # Đã fix chữ "Bún bò" ở đây
+                )
+
+                # 4. Tạo thông báo phản hồi (Hiển thị dấu - nếu là chi tiêu)
+                display_amount = f"{new_t.amount:,.0f}"
+                if category.type == 'expense':
+                    display_amount = f"-{display_amount}"  # Thêm dấu trừ khi chat với người dùng
+                else:
+                    display_amount = f"+{display_amount}"
+
+                return f"✅ Đã ghi: {new_t.description} ({display_amount}đ) vào ví {wallet.name}"
+        except Exception as e:
+            return f"❌ Lỗi: {str(e)}"
+
+    def handle_answer_question(self, user, ai_data):
+        # ... (Giữ nguyên logic cũ) ...
+        q_type = ai_data.get("query_type")
+        if q_type == "list_wallets":
+            ws = Wallet.objects.filter(user=user)
+            if not ws: return "Bạn chưa có ví nào."
+            return "Danh sách ví:\n" + "\n".join([f"- {w.name}: {w.balance:,.0f}đ" for w in ws])
+
+        if q_type == "get_wallet_balance":
+            total = sum(w.balance for w in Wallet.objects.filter(user=user))
+            return f"Tổng tài sản: {total:,.0f}đ"
+
+        return ai_data.get("answer") or "Chào bạn!"

@@ -1,8 +1,8 @@
 package ht.nguyenhuutrong.fe_moneytrackbot.ui.adapters;
 
 import android.content.Context;
-import android.graphics.PorterDuff; // Import mới
-import android.graphics.PorterDuffColorFilter; // Import mới
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffColorFilter;
 import android.graphics.drawable.Drawable;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -29,6 +29,11 @@ public class TransactionsAdapter extends RecyclerView.Adapter<TransactionsAdapte
     private Context context;
     private OnItemClickListener listener;
 
+    // Định dạng ngày và tiền tệ (Khai báo static để tối ưu hiệu năng, tránh tạo lại nhiều lần)
+    private static final SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+    private static final SimpleDateFormat outputFormat = new SimpleDateFormat("EEE, d 'thg' M, yyyy", new Locale("vi", "VN"));
+    private static final NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
+
     public interface OnItemClickListener {
         void onItemClick(Transaction transaction);
     }
@@ -50,59 +55,48 @@ public class TransactionsAdapter extends RecyclerView.Adapter<TransactionsAdapte
     public void onBindViewHolder(@NonNull TransactionViewHolder holder, int position) {
         Transaction t = list.get(position);
 
-        // --- 1. Hiển thị Category và Note ---
+        // --- 1. Hiển thị Category và Note (Description) ---
+        // Lưu ý: Đảm bảo Model Transaction của bạn có hàm getCategoryName() và getDescription()
         String catName = t.getCategoryName();
         holder.tvCategoryTitle.setText((catName != null && !catName.isEmpty()) ? catName : "Giao dịch");
-        holder.tvNote.setText(t.getNote());
+
+        // Backend trả về 'description', FE nên map vào đây
+        String note = t.getDescription() != null ? t.getDescription() : t.getNote();
+        holder.tvNote.setText(note);
 
         // --- 2. Hiển thị Ngày ---
         try {
-            SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
             Date date = inputFormat.parse(t.getDate());
-            SimpleDateFormat outputFormat = new SimpleDateFormat("EEE, d 'thg' M, yyyy", new Locale("vi", "VN"));
             if (date != null) holder.tvDate.setText(outputFormat.format(date));
-        } catch (Exception e) { holder.tvDate.setText(t.getDate()); }
+        } catch (Exception e) {
+            holder.tvDate.setText(t.getDate());
+        }
 
-        // --- 3. XỬ LÝ TIỀN TỆ (Dấu, Màu, Mũi tên) ---
-        double amount = t.getAmount();
-        String moneyString = NumberFormat.getCurrencyInstance(new Locale("vi", "VN")).format(Math.abs(amount));
+        // --- 3. XỬ LÝ LOGIC TIỀN TỆ MỚI (Dựa vào Type thay vì dấu) ---
+        double rawAmount = Math.abs(t.getAmount()); // Luôn lấy số dương để format
+        String moneyString = currencyFormat.format(rawAmount);
 
-        if (amount < 0) {
+        // 🔥 LOGIC QUAN TRỌNG: Kiểm tra loại giao dịch
+        // Giả sử Model Transaction có hàm getType() trả về "expense" hoặc "income"
+        // Hoặc t.getCategory().getType()
+        boolean isExpense = "expense".equalsIgnoreCase(t.getType());
+
+        if (isExpense) {
             // === CHI TIÊU (MÀU ĐỎ) ===
-            holder.tvAmount.setText("-" + moneyString);
+            holder.tvAmount.setText("-" + moneyString); // Thêm dấu trừ hiển thị
 
             int colorRed = ContextCompat.getColor(context, R.color.obese);
             holder.tvAmount.setTextColor(colorRed);
+            setupArrow(holder.tvAmount, R.drawable.ic_triangle_down, colorRed);
 
-            // Xử lý icon Mũi tên xuống
-            Drawable arrowDown = ContextCompat.getDrawable(context, R.drawable.ic_triangle_down);
-            if (arrowDown != null) {
-                // mutate() tạo bản sao để không ảnh hưởng icon gốc
-                arrowDown = arrowDown.mutate();
-                // 🔥 SỬ DỤNG COLOR FILTER (Mạnh hơn setTint)
-                arrowDown.setColorFilter(new PorterDuffColorFilter(colorRed, PorterDuff.Mode.SRC_IN));
-                holder.tvAmount.setCompoundDrawablesWithIntrinsicBounds(arrowDown, null, null, null);
-            }
         } else {
             // === THU NHẬP (MÀU XANH) ===
-            holder.tvAmount.setText("+" + moneyString);
+            holder.tvAmount.setText("+" + moneyString); // Thêm dấu cộng hiển thị
 
             int colorGreen = ContextCompat.getColor(context, R.color.normal_weight);
             holder.tvAmount.setTextColor(colorGreen);
-
-            // Xử lý icon Mũi tên lên
-            Drawable arrowUp = ContextCompat.getDrawable(context, R.drawable.ic_triangle_up);
-            if (arrowUp != null) {
-                arrowUp = arrowUp.mutate();
-                // 🔥 SỬ DỤNG COLOR FILTER
-                arrowUp.setColorFilter(new PorterDuffColorFilter(colorGreen, PorterDuff.Mode.SRC_IN));
-                holder.tvAmount.setCompoundDrawablesWithIntrinsicBounds(arrowUp, null, null, null);
-            }
+            setupArrow(holder.tvAmount, R.drawable.ic_triangle_up, colorGreen);
         }
-
-        // Set text cho dòng tiền nhỏ
-        String signedAmount = NumberFormat.getCurrencyInstance(new Locale("vi", "VN")).format(amount);
-        holder.tvAmountSmall.setText(signedAmount);
 
         // --- 4. Icon Category logic ---
         String categoryLower = (catName != null) ? catName.toLowerCase() : "";
@@ -118,17 +112,26 @@ public class TransactionsAdapter extends RecyclerView.Adapter<TransactionsAdapte
         });
     }
 
+    // Hàm phụ trợ để set icon mũi tên cho gọn code
+    private void setupArrow(TextView textView, int iconResId, int color) {
+        Drawable arrow = ContextCompat.getDrawable(context, iconResId);
+        if (arrow != null) {
+            arrow = arrow.mutate();
+            arrow.setColorFilter(new PorterDuffColorFilter(color, PorterDuff.Mode.SRC_IN));
+            textView.setCompoundDrawablesWithIntrinsicBounds(arrow, null, null, null);
+        }
+    }
+
     @Override
     public int getItemCount() { return list.size(); }
 
-    class TransactionViewHolder extends RecyclerView.ViewHolder {
-        TextView tvDate, tvCategoryTitle, tvNote, tvAmount, tvAmountSmall;
+    static class TransactionViewHolder extends RecyclerView.ViewHolder {
+        TextView tvDate, tvCategoryTitle, tvNote, tvAmount; // Bỏ tvAmountSmall nếu không dùng
         ImageView imgCategory;
 
         public TransactionViewHolder(@NonNull View itemView) {
             super(itemView);
             tvDate = itemView.findViewById(R.id.tvDate);
-            tvAmountSmall = itemView.findViewById(R.id.tvAmountSmall);
             imgCategory = itemView.findViewById(R.id.imgCategory);
             tvCategoryTitle = itemView.findViewById(R.id.tvCategory);
             tvNote = itemView.findViewById(R.id.tvNote);

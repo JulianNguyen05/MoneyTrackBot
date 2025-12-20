@@ -48,8 +48,9 @@ public class MainActivity extends AppCompatActivity {
                 selectedFragment = new TransactionsFragment();
             } else if (itemId == R.id.nav_chatbot) {
                 // Mở Activity ChatBot - Không dùng Fragment
-                startActivity(new Intent(this, ChatBotActivity.class));
-                return true;
+                Intent intent = new Intent(this, ChatBotActivity.class);
+                startActivity(intent);
+                return false; // Trả về false để không highlight tab Chatbot
             } else if (itemId == R.id.nav_settings) {
                 selectedFragment = new SettingsFragment();
             }
@@ -61,10 +62,30 @@ public class MainActivity extends AppCompatActivity {
             return false;
         });
 
-        // 4. Load Home mặc định
+        // 4. Load Home mặc định (Chỉ khi chưa có trạng thái lưu)
         if (savedInstanceState == null) {
             loadFragment(new HomeFragment());
             bottomNavigationView.setSelectedItemId(R.id.nav_home);
+        }
+
+        // 🔥 5. QUAN TRỌNG: Kiểm tra xem có yêu cầu chuyển Tab từ ChatBot không
+        handleNavigationIntent(getIntent());
+    }
+
+    // 🔥 6. Hỗ trợ SingleTop: Khi Activity đã mở sẵn mà được gọi lại
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent); // Cập nhật intent mới nhất
+        handleNavigationIntent(intent);
+    }
+
+    // 🔥 7. Hàm xử lý logic chuyển tab
+    private void handleNavigationIntent(Intent intent) {
+        if (intent != null && "TRANSACTIONS".equals(intent.getStringExtra("NAVIGATE_TO"))) {
+            // Tự động click vào tab Giao dịch
+            // Việc này sẽ kích hoạt listener ở trên và load TransactionsFragment
+            bottomNavigationView.setSelectedItemId(R.id.nav_transactions);
         }
     }
 

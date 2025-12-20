@@ -1,11 +1,12 @@
 package ht.nguyenhuutrong.fe_moneytrackbot.ui.activities;
 
+import android.content.Intent; // Import mới
 import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.LinearLayout;
 
+import androidx.activity.OnBackPressedCallback; // Import mới
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.view.ViewCompat;
@@ -30,7 +31,7 @@ public class ChatBotActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_chatbot); // dùng lại layout cũ OK
+        setContentView(R.layout.activity_chatbot);
 
         // 1. Ánh xạ view
         recyclerChat = findViewById(R.id.recycler_chat);
@@ -39,8 +40,16 @@ public class ChatBotActivity extends AppCompatActivity {
         layoutInput = findViewById(R.id.layout_input);
         MaterialToolbar toolbar = findViewById(R.id.toolbar);
 
-        // 2. Toolbar back → thoát Activity (về Home)
-        toolbar.setNavigationOnClickListener(v -> finish());
+        // --- 🔥 SỬA ĐỔI 1: Xử lý nút Back trên Toolbar ---
+        toolbar.setNavigationOnClickListener(v -> navigateToTransactions());
+
+        // --- 🔥 SỬA ĐỔI 2: Xử lý nút Back vật lý của điện thoại ---
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                navigateToTransactions();
+            }
+        });
 
         // 3. ViewModel & Renderer
         viewModel = new ViewModelProvider(this).get(ChatViewModel.class);
@@ -86,5 +95,19 @@ public class ChatBotActivity extends AppCompatActivity {
                 recyclerChat.smoothScrollToPosition(count - 1);
             }
         }
+    }
+
+    // --- 🔥 HÀM MỚI: Điều hướng về MainActivity và chọn Tab Giao dịch ---
+    private void navigateToTransactions() {
+        Intent intent = new Intent(this, MainActivity.class);
+        // FLAG_ACTIVITY_CLEAR_TOP: Xóa các activity nằm trên MainActivity (nếu có)
+        // FLAG_ACTIVITY_SINGLE_TOP: Nếu MainActivity đang mở, dùng lại nó chứ không tạo mới
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+
+        // Gửi kèm tín hiệu để MainActivity biết cần mở tab nào
+        intent.putExtra("NAVIGATE_TO", "TRANSACTIONS");
+
+        startActivity(intent);
+        finish();
     }
 }
