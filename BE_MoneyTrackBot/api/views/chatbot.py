@@ -2,11 +2,9 @@ import datetime
 import json
 from decimal import Decimal
 
-# Google Gemini AI
 import google.generativeai as genai
 from google.api_core import exceptions as google_exceptions
 
-# Django
 from django.conf import settings
 from django.db import transaction
 from django.db.models import Sum
@@ -14,20 +12,14 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import permissions, status
 
-# Models
 from ..models import Wallet, Category, Transaction
 
-# ==========================================================
-# 🔑 CẤU HÌNH GEMINI
-# ==========================================================
 model = None
 try:
     genai.configure(api_key=settings.GEMINI_API_KEY)
 
-    # Dò tìm model hỗ trợ
     my_models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
 
-    # Ưu tiên Flash 1.5
     priority_list = [
         "gemini-1.5-flash", "gemini-1.5-flash-latest", "gemini-1.5-flash-001",
         "gemini-flash-latest", "gemini-2.0-flash-exp", "gemini-pro"
@@ -68,15 +60,12 @@ class ChatbotView(APIView):
         if model is None: return Response({"reply": "Lỗi AI Server."}, status=503)
 
         try:
-            # 1. Chuẩn bị dữ liệu
             wallets_qs = Wallet.objects.filter(user=user).values("id", "name", "balance")
             wallets = [{"id": w["id"], "name": w["name"], "balance": float(w["balance"])} for w in wallets_qs]
             categories = list(Category.objects.filter(user=user).values("id", "name", "type"))
 
-            # 2. Tạo Prompt
             prompt = self.build_prompt(message, wallets, categories)
 
-            # 3. Gọi AI
             generation_config = genai.types.GenerationConfig(
                 response_mime_type="application/json", temperature=0.2
             )
@@ -88,7 +77,6 @@ class ChatbotView(APIView):
             action = ai_data.get("action")
             reply_message = ai_data.get("reply", "Đã xử lý.")
 
-            # 4. Xử lý Action
             if action == "create_transaction":
                 msg = self.create_transaction_from_ai(user, ai_data.get("data"))
                 return Response({"reply": msg})
@@ -140,28 +128,24 @@ class ChatbotView(APIView):
                 wallet = Wallet.objects.get(id=data["wallet_id"], user=user)
                 category = Category.objects.get(id=data["category_id"], user=user)
 
-                # 1. Lấy mô tả (SỬA LỖI: Ưu tiên lấy description, nếu không có thì lấy note, ko có nữa mới lấy tên danh mục)
                 description = data.get("description") or data.get("note") or category.name
                 description = description.strip().capitalize()
 
-                # 2. Xử lý tiền
                 raw_amount = Decimal(str(data["amount"]))
-                amount_val = abs(raw_amount)  # DB luôn lưu dương
+                amount_val = abs(raw_amount)
 
-                # 3. Tạo Transaction
                 new_t = Transaction.objects.create(
                     user=user,
                     wallet=wallet,
                     category=category,
                     amount=amount_val,
                     date=data.get("date", datetime.date.today()),
-                    description=description  # Đã fix chữ "Bún bò" ở đây
+                    description=description
                 )
 
-                # 4. Tạo thông báo phản hồi (Hiển thị dấu - nếu là chi tiêu)
                 display_amount = f"{new_t.amount:,.0f}"
                 if category.type == 'expense':
-                    display_amount = f"-{display_amount}"  # Thêm dấu trừ khi chat với người dùng
+                    display_amount = f"-{display_amount}"
                 else:
                     display_amount = f"+{display_amount}"
 
@@ -170,7 +154,6 @@ class ChatbotView(APIView):
             return f"❌ Lỗi: {str(e)}"
 
     def handle_answer_question(self, user, ai_data):
-        # ... (Giữ nguyên logic cũ) ...
         q_type = ai_data.get("query_type")
         if q_type == "list_wallets":
             ws = Wallet.objects.filter(user=user)

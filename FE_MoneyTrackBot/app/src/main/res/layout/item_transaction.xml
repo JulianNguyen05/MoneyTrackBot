@@ -33,15 +33,6 @@
                 android:textSize="13sp"
                 android:textColor="@color/light_gray_hint"
                 android:fontFamily="@font/poppins_regular" />
-
-            <TextView
-                android:id="@+id/tvAmountSmall"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="-15.000đ"
-                android:textColor="@color/light_gray_hint"
-                android:textSize="13sp"
-                android:fontFamily="@font/poppins_regular"/>
         </LinearLayout>
 
         <!-- ─────────────  Dòng icon + category + note + amount ───────────── -->
