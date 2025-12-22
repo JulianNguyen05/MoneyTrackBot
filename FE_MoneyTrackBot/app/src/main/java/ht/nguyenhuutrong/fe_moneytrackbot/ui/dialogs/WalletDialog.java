@@ -21,7 +21,7 @@ public class WalletDialog {
      * Callback trả kết quả thao tác Ví
      */
     public interface OnWalletActionListener {
-        void onCreate(String name, double balance);
+        void onCreate(String name);
         void onUpdate(Wallet wallet);
         void onDelete(int walletId);
     }
@@ -37,7 +37,6 @@ public class WalletDialog {
 
         TextView tvTitle = view.findViewById(R.id.tv_dialog_title);
         EditText etName = view.findViewById(R.id.et_wallet_name);
-        EditText etBalance = view.findViewById(R.id.et_wallet_balance);
         TextView btnCancel = view.findViewById(R.id.btn_cancel);
         TextView btnConfirm = view.findViewById(R.id.btn_confirm);
 
@@ -58,15 +57,10 @@ public class WalletDialog {
 
         btnConfirm.setOnClickListener(v -> {
             String name = etName.getText().toString().trim();
-            String balanceStr = etBalance.getText().toString().trim();
 
             if (name.isEmpty() || listener == null) return;
 
-            double balance = balanceStr.isEmpty()
-                    ? 0
-                    : Double.parseDouble(balanceStr);
-
-            listener.onCreate(name, balance);
+            listener.onCreate(name);
             dialog.dismiss();
         });
 
@@ -88,7 +82,6 @@ public class WalletDialog {
 
         TextView tvTitle = view.findViewById(R.id.tv_dialog_title);
         EditText etName = view.findViewById(R.id.et_wallet_name);
-        EditText etBalance = view.findViewById(R.id.et_wallet_balance);
         TextView btnCancel = view.findViewById(R.id.btn_cancel);
         TextView btnConfirm = view.findViewById(R.id.btn_confirm);
 
@@ -96,7 +89,6 @@ public class WalletDialog {
         btnConfirm.setText("CẬP NHẬT");
 
         etName.setText(wallet.getName());
-        etBalance.setText(String.valueOf((long) wallet.getBalance()));
 
         // Biến nút Cancel thành XÓA
         btnCancel.setText("XÓA");
@@ -123,15 +115,11 @@ public class WalletDialog {
         btnConfirm.setOnClickListener(v -> {
             if (listener == null) return;
 
-            wallet.setName(etName.getText().toString().trim());
+            String newName = etName.getText().toString().trim();
+            if (newName.isEmpty()) return;
 
-            try {
-                wallet.setBalance(
-                        Double.parseDouble(etBalance.getText().toString())
-                );
-                listener.onUpdate(wallet);
-            } catch (NumberFormatException ignored) {
-            }
+            wallet.setName(newName);
+            listener.onUpdate(wallet);
 
             dialog.dismiss();
         });

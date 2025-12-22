@@ -92,8 +92,8 @@ public class HomeFragment extends Fragment {
         viewModel.getWallets().observe(getViewLifecycleOwner(), wallets ->
                 uiManager.updateWallets(wallets, new WalletRenderer.WalletActionListener() {
                     @Override
-                    public void onCreate(String name, double balance) {
-                        viewModel.createWallet(name, balance);
+                    public void onCreate(String name) {
+                        viewModel.createWallet(name, 0);
                     }
 
                     @Override

@@ -35,7 +35,7 @@ public class WalletRenderer {
      * Callback để thông báo hành động ví về Fragment / ViewModel
      */
     public interface WalletActionListener {
-        void onCreate(String name, double balance);
+        void onCreate(String name);
         void onUpdate(Wallet wallet);
         void onDelete(int id);
     }
@@ -102,8 +102,8 @@ public class WalletRenderer {
 
         view.findViewById(R.id.card_add_wallet).setOnClickListener(v ->
                 WalletDialog.showAddWallet(context, new WalletDialog.OnWalletActionListener() {
-                    @Override public void onCreate(String name, double balance) {
-                        listener.onCreate(name, balance);
+                    @Override public void onCreate(String name) {
+                        listener.onCreate(name);
                     }
                     @Override public void onUpdate(Wallet wallet) {}
                     @Override public void onDelete(int id) {}
@@ -121,7 +121,7 @@ public class WalletRenderer {
                 context,
                 wallet,
                 new WalletDialog.OnWalletActionListener() {
-                    @Override public void onCreate(String name, double balance) {}
+                    @Override public void onCreate(String name) {}
                     @Override public void onUpdate(Wallet w) { listener.onUpdate(w); }
                     @Override public void onDelete(int id) { listener.onDelete(id); }
                 }
