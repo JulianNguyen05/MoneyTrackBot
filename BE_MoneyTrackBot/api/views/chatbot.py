@@ -81,6 +81,14 @@ class ChatbotView(APIView):
                 msg = self.create_transaction_from_ai(user, ai_data.get("data"))
                 return Response({"reply": msg})
 
+            if action == "create_wallet":
+                msg = self.handle_create_wallet(user, ai_data.get("data", {}))
+                return Response({"reply": msg})
+
+            if action == "create_category":
+                msg = self.handle_create_category(user, ai_data.get("data", {}))
+                return Response({"reply": msg})
+
             if action == "answer_question":
                 msg = self.handle_answer_question(user, ai_data)
                 return Response({"reply": msg})
@@ -97,30 +105,62 @@ class ChatbotView(APIView):
         today = datetime.date.today().strftime("%Y-%m-%d")
         return f"""
             Bạn là MoneyTrack Bot. Hôm nay: {today}.
-            Ví: {json.dumps(wallets)}
-            Danh mục: {json.dumps(categories)}
+            Ví hiện có: {json.dumps(wallets)}
+            Danh mục hiện có: {json.dumps(categories)}
 
-            NHIỆM VỤ: Trả về JSON chuẩn. 
-            Nếu người dùng muốn tạo giao dịch (thu/chi), hãy trích xuất:
-            - description: nội dung chi tiết (VD: "ăn bún bò", "đổ xăng").
-            - amount: số tiền (luôn là số dương).
+            NHIỆM VỤ: Trả về JSON chuẩn.
+            Phân tích tin nhắn người dùng để thực hiện:
+            1. Tạo giao dịch (thu/chi): action="create_transaction"
+            2. Tạo ví mới (VD: "tạo ví Momo"): action="create_wallet", data: {{"name": str}}
+            3. Tạo danh mục (VD: "thêm danh mục Ăn uống loại chi"): action="create_category", data: {{"name": str, "type": "income"|"expense"}}
+            4. Hỏi đáp: action="answer_question"
 
             Format JSON:
             {{
-                "action": "create_transaction" | "answer_question" | "error_validation",
+                "action": "create_transaction" | "create_wallet" | "create_category" | "answer_question" | "error_validation",
                 "query_type": "...",
                 "data": {{ 
                     "wallet_id": int, 
                     "category_id": int, 
                     "amount": float, 
                     "description": "string",
-                    "date": "YYYY-MM-DD"
+                    "date": "YYYY-MM-DD",
+                    "name": "string",
+                    "balance": float,
+                    "type": "income"|"expense"
                 }},
-                "reply": "Câu trả lời ngắn",
+                "reply": "Câu trả lời ngắn gọn xác nhận hành động",
                 "answer": "Câu trả lời chi tiết"
             }}
             Tin nhắn: "{message}"
         """
+
+    def handle_create_wallet(self, user, data):
+        try:
+            name = data.get("name")
+            balance = data.get("balance", 0)
+            if not name: return "❌ Vui lòng cung cấp tên ví."
+
+            wallet = Wallet.objects.create(user=user, name=name, balance=balance)
+            return f"✅ Đã tạo ví **{wallet.name}** thành công với số dư {wallet.balance:,.0f}đ."
+        except Exception as e:
+            return f"❌ Lỗi tạo ví: {str(e)}"
+
+    def handle_create_category(self, user, data):
+        try:
+            name = data.get("name")
+            c_type = data.get("type", "expense")  # Mặc định là chi
+            if not name: return "❌ Vui lòng cung cấp tên danh mục."
+
+            category, created = Category.objects.get_or_create(
+                user=user, name=name, defaults={'type': c_type}
+            )
+            if not created: return f"ℹ️ Danh mục '{name}' đã tồn tại."
+
+            type_str = "Thu nhập" if c_type == "income" else "Chi tiêu"
+            return f"✅ Đã tạo danh mục **{name}** ({type_str}) thành công."
+        except Exception as e:
+            return f"❌ Lỗi tạo danh mục: {str(e)}"
 
     def create_transaction_from_ai(self, user, data):
         try:

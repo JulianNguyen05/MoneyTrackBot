@@ -30,12 +30,12 @@ import java.util.List;
 import java.util.Locale;
 
 import ht.nguyenhuutrong.fe_moneytrackbot.R;
-import ht.nguyenhuutrong.fe_moneytrackbot.ui.adapters.TransactionsAdapter;
-import ht.nguyenhuutrong.fe_moneytrackbot.ui.dialogs.TransactionDialog;
 import ht.nguyenhuutrong.fe_moneytrackbot.data.models.CashFlowResponse;
 import ht.nguyenhuutrong.fe_moneytrackbot.data.models.Category;
 import ht.nguyenhuutrong.fe_moneytrackbot.data.models.Transaction;
 import ht.nguyenhuutrong.fe_moneytrackbot.data.models.Wallet;
+import ht.nguyenhuutrong.fe_moneytrackbot.ui.adapters.TransactionsAdapter;
+import ht.nguyenhuutrong.fe_moneytrackbot.ui.dialogs.TransactionDialog;
 import ht.nguyenhuutrong.fe_moneytrackbot.ui.viewmodels.TransactionViewModel;
 
 public class TransactionsFragment extends Fragment {
@@ -57,7 +57,7 @@ public class TransactionsFragment extends Fragment {
     private View cardDateRangePicker;
     private MaterialCardView btnAdd;
 
-    // Cached data cho Dialog thêm / sửa
+    // Cached data
     private List<Wallet> cachedWallets = new ArrayList<>();
     private List<Category> cachedCategories = new ArrayList<>();
 
@@ -79,7 +79,6 @@ public class TransactionsFragment extends Fragment {
         setupListeners();
         bindViewModel();
 
-        // Load dữ liệu ban đầu
         viewModel.loadWallets();
         viewModel.loadCategories();
         initDefaultDate();
@@ -87,9 +86,6 @@ public class TransactionsFragment extends Fragment {
         return view;
     }
 
-    /**
-     * Ánh xạ view & setup RecyclerView
-     */
     private void initViews(View view) {
         rcvTransactions = view.findViewById(R.id.rcvTransactions);
         rcvTransactions.setLayoutManager(new LinearLayoutManager(getContext()));
@@ -105,40 +101,30 @@ public class TransactionsFragment extends Fragment {
         btnAdd = view.findViewById(R.id.btnAddTransaction);
     }
 
-    /**
-     * Gán sự kiện click UI
-     */
     private void setupListeners() {
         tvWalletSelector.setOnClickListener(v -> showWalletSelectionDialog());
         cardDateRangePicker.setOnClickListener(v -> showDateRangePicker());
         btnAdd.setOnClickListener(v -> showTransactionDialog(null));
     }
 
-    /**
-     * Bind dữ liệu từ ViewModel ra UI
-     */
     private void bindViewModel() {
 
-        // Danh sách giao dịch
         viewModel.getTransactions().observe(getViewLifecycleOwner(), list -> {
             if (list == null) return;
             adapter = new TransactionsAdapter(list, this::showTransactionDialog);
             rcvTransactions.setAdapter(adapter);
         });
 
-        // Cache ví & danh mục cho Dialog
         viewModel.getWallets().observe(getViewLifecycleOwner(), wallets -> cachedWallets = wallets);
         viewModel.getCategories().observe(getViewLifecycleOwner(), categories -> cachedCategories = categories);
 
-        // Tổng kết thu / chi
         viewModel.getCashFlow().observe(getViewLifecycleOwner(), this::updateSummaryUI);
 
-        // Ví đang chọn
-        viewModel.selectedWallet.observe(getViewLifecycleOwner(), wallet ->
-                tvWalletSelector.setText(wallet == null ? "Tất cả ví" : wallet.getName())
+        viewModel.selectedWallet.observe(
+                getViewLifecycleOwner(),
+                wallet -> tvWalletSelector.setText(wallet == null ? "Tất cả ví" : wallet.getName())
         );
 
-        // Thông báo
         viewModel.getMessage().observe(getViewLifecycleOwner(), msg -> {
             if (msg != null && getContext() != null) {
                 Toast.makeText(getContext(), msg, Toast.LENGTH_SHORT).show();
@@ -146,9 +132,6 @@ public class TransactionsFragment extends Fragment {
         });
     }
 
-    /**
-     * Cập nhật thẻ tổng kết
-     */
     private void updateSummaryUI(CashFlowResponse data) {
         if (data == null) return;
 
@@ -162,9 +145,6 @@ public class TransactionsFragment extends Fragment {
         tvBalance.setTextColor(ContextCompat.getColor(requireContext(), color));
     }
 
-    /**
-     * Dialog chọn ví lọc giao dịch
-     */
     private void showWalletSelectionDialog() {
         if (cachedWallets.isEmpty()) {
             Toast.makeText(getContext(), "Đang tải danh sách ví...", Toast.LENGTH_SHORT).show();
@@ -178,8 +158,6 @@ public class TransactionsFragment extends Fragment {
         }
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-        builder.setTitle("Chọn ví xem giao dịch");
-
         ArrayAdapter<String> adapter =
                 new ArrayAdapter<>(getContext(), R.layout.item_dropdown, names);
 
@@ -188,12 +166,13 @@ public class TransactionsFragment extends Fragment {
             else viewModel.setWallet(cachedWallets.get(which - 1));
         });
 
-        builder.show();
+        AlertDialog dialog = builder.create();
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(R.drawable.bg_dialog_rounded);
+        }
+        dialog.show();
     }
 
-    /**
-     * Dialog chọn khoảng thời gian
-     */
     private void showDateRangePicker() {
         MaterialDatePicker.Builder<Pair<Long, Long>> builder =
                 MaterialDatePicker.Builder.dateRangePicker();
@@ -229,9 +208,6 @@ public class TransactionsFragment extends Fragment {
         picker.show(getParentFragmentManager(), "TRANSACTION_DATE_PICKER");
     }
 
-    /**
-     * Dialog thêm / sửa / xóa giao dịch
-     */
     private void showTransactionDialog(Transaction existingTransaction) {
         if (getContext() == null) return;
 
@@ -258,9 +234,6 @@ public class TransactionsFragment extends Fragment {
         );
     }
 
-    /**
-     * Khởi tạo khoảng thời gian mặc định (tháng hiện tại)
-     */
     private void initDefaultDate() {
         Calendar calendar = Calendar.getInstance();
 
