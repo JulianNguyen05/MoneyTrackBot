@@ -12,7 +12,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import permissions, status
 
-from ..models import Wallet, Category, Transaction
+from ..models import Wallet, Category, Transaction, ChatHistory
 
 model = None
 try:
@@ -57,14 +57,23 @@ class ChatbotView(APIView):
         print("=" * 70)
 
         if not message: return Response({"reply": "Tin nhắn rỗng"}, status=400)
+
+        # Lưu tin nhắn User
+        ChatHistory.objects.create(user=user, role='user', message=message)
+
         if model is None: return Response({"reply": "Lỗi AI Server."}, status=503)
 
         try:
+            # Lấy data ngữ cảnh
             wallets_qs = Wallet.objects.filter(user=user).values("id", "name", "balance")
             wallets = [{"id": w["id"], "name": w["name"], "balance": float(w["balance"])} for w in wallets_qs]
             categories = list(Category.objects.filter(user=user).values("id", "name", "type"))
 
-            prompt = self.build_prompt(message, wallets, categories)
+            # Lấy 10 tin gần nhất để AI hiểu ngữ cảnh (VD: vừa nhập xong thì muốn sửa)
+            recent_chats = ChatHistory.objects.filter(user=user).order_by('-created_at')[:10]
+            history_context = "\n".join([f"{chat.role}: {chat.message}" for chat in reversed(recent_chats)])
+
+            prompt = self.build_prompt(message, wallets, categories, history_context)
 
             generation_config = genai.types.GenerationConfig(
                 response_mime_type="application/json", temperature=0.2
@@ -74,66 +83,110 @@ class ChatbotView(APIView):
             print("🤖 AI RESPONSE (JSON)\n" + "-" * 70 + f"\n{response.text}\n" + "-" * 70)
 
             ai_data = json.loads(response.text)
-            action = ai_data.get("action")
             reply_message = ai_data.get("reply", "Đã xử lý.")
+            action = ai_data.get("action")
+
+            # --- XỬ LÝ ACTION ---
+
+            final_reply = reply_message  # Mặc định là lời thoại của AI
 
             if action == "create_transaction":
-                msg = self.create_transaction_from_ai(user, ai_data.get("data"))
-                return Response({"reply": msg})
+                final_reply = self.create_transaction_from_ai(user, ai_data.get("data"))
 
-            if action == "create_wallet":
-                msg = self.handle_create_wallet(user, ai_data.get("data", {}))
-                return Response({"reply": msg})
+            elif action == "create_wallet":
+                final_reply = self.handle_create_wallet(user, ai_data.get("data", {}))
 
-            if action == "create_category":
-                msg = self.handle_create_category(user, ai_data.get("data", {}))
-                return Response({"reply": msg})
+            elif action == "create_category":
+                final_reply = self.handle_create_category(user, ai_data.get("data", {}))
 
-            if action == "answer_question":
-                msg = self.handle_answer_question(user, ai_data)
-                return Response({"reply": msg})
+            # [NEW] Action sửa ví cho giao dịch vừa nhập
+            elif action == "switch_wallet":
+                final_reply = self.handle_switch_wallet(user, ai_data.get("data", {}))
 
-            return Response({"reply": reply_message})
+            elif action == "answer_question":
+                final_reply = self.handle_answer_question(user, ai_data)
+
+            # Lưu câu trả lời của Bot (hoặc kết quả hành động) vào DB
+            ChatHistory.objects.create(user=user, role='model', message=final_reply)
+
+            return Response({"reply": final_reply})
 
         except google_exceptions.ResourceExhausted:
-            return Response({"reply": "Bot quá tải (Hết lượt free). Thử lại sau 1 phút! ⏳"}, status=429)
+            return Response({"reply": "Bot quá tải. Thử lại sau 1 phút! ⏳"}, status=429)
         except Exception as e:
             print(f"❌ ERROR: {str(e)}")
-            return Response({"reply": "Lỗi xử lý hệ thống."}, status=500)
+            return Response({"reply": f"Lỗi xử lý: {str(e)}"}, status=500)
 
-    def build_prompt(self, message, wallets, categories):
+    def build_prompt(self, message, wallets, categories, history_context):
         today = datetime.date.today().strftime("%Y-%m-%d")
         return f"""
             Bạn là MoneyTrack Bot. Hôm nay: {today}.
-            Ví hiện có: {json.dumps(wallets)}
-            Danh mục hiện có: {json.dumps(categories)}
+            DỮ LIỆU CỦA USER:
+            - Ví: {json.dumps(wallets, ensure_ascii=False)}
+            - Danh mục: {json.dumps(categories, ensure_ascii=False)}
 
-            NHIỆM VỤ: Trả về JSON chuẩn.
-            Phân tích tin nhắn người dùng để thực hiện:
-            1. Tạo giao dịch (thu/chi): action="create_transaction"
-            2. Tạo ví mới (VD: "tạo ví Momo"): action="create_wallet", data: {{"name": str}}
-            3. Tạo danh mục (VD: "thêm danh mục Ăn uống loại chi"): action="create_category", data: {{"name": str, "type": "income"|"expense"}}
-            4. Hỏi đáp: action="answer_question"
+            LỊCH SỬ HỘI THOẠI:
+            {history_context}
 
-            Format JSON:
+            NHIỆM VỤ: Phân tích tin nhắn và trả về JSON hành động.
+
+            LOGIC XỬ LÝ QUAN TRỌNG:
+            1. **Tạo giao dịch**: Nếu user nói "ăn 20k", "lương 10tr" -> action="create_transaction".
+            2. **Chuyển ví / Sửa ví**: Nếu user vừa nhập giao dịch xong, sau đó nói "ghi vào ví khác", "tạo ví ABC rồi ghi vào đó", "nhầm ví rồi" -> action="switch_wallet". 
+               Lúc này bạn trích xuất tên ví mới vào data.
+            3. **Tạo ví**: Chỉ tạo ví đơn thuần nếu không có ngữ cảnh sửa giao dịch.
+            4. **Hỏi đáp**: action="answer_question".
+
+            FORMAT JSON OUTPUT:
             {{
-                "action": "create_transaction" | "create_wallet" | "create_category" | "answer_question" | "error_validation",
-                "query_type": "...",
+                "action": "create_transaction" | "create_wallet" | "create_category" | "switch_wallet" | "answer_question",
                 "data": {{ 
-                    "wallet_id": int, 
+                    "wallet_id": int (nếu có),
+                    "target_wallet_name": "string (dùng cho switch_wallet/create_wallet)",
                     "category_id": int, 
                     "amount": float, 
                     "description": "string",
                     "date": "YYYY-MM-DD",
                     "name": "string",
-                    "balance": float,
                     "type": "income"|"expense"
                 }},
-                "reply": "Câu trả lời ngắn gọn xác nhận hành động",
-                "answer": "Câu trả lời chi tiết"
+                "reply": "Câu trả lời tự nhiên cho user (Tiếng Việt)"
             }}
-            Tin nhắn: "{message}"
+            Tin nhắn user: "{message}"
         """
+
+    def handle_switch_wallet(self, user, data):
+        """
+        Logic: Tìm giao dịch mới nhất của user -> Tạo ví mới (nếu cần) -> Update ví cho giao dịch đó
+        """
+        target_wallet_name = data.get("target_wallet_name")
+        if not target_wallet_name: return "❌ Không xác định được tên ví muốn chuyển tới."
+
+        try:
+            with transaction.atomic():
+                # 1. Tìm hoặc tạo ví đích
+                target_wallet, created = Wallet.objects.get_or_create(
+                    user=user,
+                    name=target_wallet_name,
+                    defaults={'balance': 0}
+                )
+
+                # 2. Tìm giao dịch cuối cùng user vừa nhập (sắp xếp theo ID giảm dần)
+                last_trans = Transaction.objects.filter(user=user).order_by('-id').first()
+
+                if not last_trans:
+                    return f"❌ Không tìm thấy giao dịch nào gần đây để chuyển sang ví {target_wallet_name}."
+
+                # 3. Update ví
+                old_wallet_name = last_trans.wallet.name
+                last_trans.wallet = target_wallet
+                last_trans.save()
+
+                msg_create = f"Đã tạo ví mới **{target_wallet_name}**. " if created else ""
+                return f"✅ {msg_create}Đã chuyển giao dịch '{last_trans.description}' ({last_trans.amount:,.0f}đ) từ ví {old_wallet_name} sang ví **{target_wallet_name}**."
+
+        except Exception as e:
+            return f"❌ Lỗi khi chuyển ví: {str(e)}"
 
     def handle_create_wallet(self, user, data):
         try:
@@ -164,34 +217,36 @@ class ChatbotView(APIView):
 
     def create_transaction_from_ai(self, user, data):
         try:
-            with transaction.atomic():
-                wallet = Wallet.objects.get(id=data["wallet_id"], user=user)
-                category = Category.objects.get(id=data["category_id"], user=user)
+            wallet_id = data.get("wallet_id")
+            # Nếu AI không tìm thấy ví, tự lấy ví đầu tiên hoặc ví có nhiều tiền nhất
+            if not wallet_id:
+                first_wallet = Wallet.objects.filter(user=user).first()
+                if not first_wallet: return "❌ Bạn chưa có ví nào. Hãy tạo ví trước."
+                wallet = first_wallet
+            else:
+                wallet = Wallet.objects.get(id=wallet_id, user=user)
 
-                description = data.get("description") or data.get("note") or category.name
-                description = description.strip().capitalize()
+            category = Category.objects.get(id=data["category_id"], user=user)
 
-                raw_amount = Decimal(str(data["amount"]))
-                amount_val = abs(raw_amount)
+            description = data.get("description") or category.name
+            description = description.strip().capitalize()
 
-                new_t = Transaction.objects.create(
-                    user=user,
-                    wallet=wallet,
-                    category=category,
-                    amount=amount_val,
-                    date=data.get("date", datetime.date.today()),
-                    description=description
-                )
+            raw_amount = Decimal(str(data["amount"]))
+            amount_val = abs(raw_amount)
 
-                display_amount = f"{new_t.amount:,.0f}"
-                if category.type == 'expense':
-                    display_amount = f"-{display_amount}"
-                else:
-                    display_amount = f"+{display_amount}"
+            new_t = Transaction.objects.create(
+                user=user,
+                wallet=wallet,
+                category=category,
+                amount=amount_val,
+                date=data.get("date", datetime.date.today()),
+                description=description
+            )
 
-                return f"✅ Đã ghi: {new_t.description} ({display_amount}đ) vào ví {wallet.name}"
+            prefix = "-" if category.type == 'expense' else "+"
+            return f"✅ Đã ghi: {description} ({prefix}{new_t.amount:,.0f}đ) vào ví **{wallet.name}**."
         except Exception as e:
-            return f"❌ Lỗi: {str(e)}"
+            return f"❌ Lỗi ghi giao dịch: {str(e)}"
 
     def handle_answer_question(self, user, ai_data):
         q_type = ai_data.get("query_type")
